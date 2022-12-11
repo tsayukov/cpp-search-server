@@ -101,18 +101,35 @@ private:
         return words;
     }
     
+    struct QueryWord {
+        string content;
+        bool is_minus;
+        bool is_stop;
+    };
+    
     struct Query {
         set<string> plus_words;
         set<string> minus_words;
     };
 
+    QueryWord ParseQueryWord(string word) const {
+        bool is_minus = word[0] == '-';
+        if (is_minus) {
+            word = word.substr(1);
+        }
+        return {word, is_minus, IsStopWord(word)};
+    }
+
     Query ParseQuery(const string& text) const {
         Query query;
-        for (const string& word : SplitIntoWordsNoStop(text)) {
-            if (word[0] != '-') {
-                query.plus_words.insert(word);
-            } else if (const string minus_word = word.substr(1); !IsStopWord(minus_word)) {
-                query.minus_words.insert(minus_word);
+        for (const string& word : SplitIntoWords(text)) {
+            const QueryWord query_word = ParseQueryWord(word);
+            if (!query_word.is_stop) {
+                if (query_word.is_minus) {
+                    query.minus_words.insert(query_word.content);
+                } else {
+                    query.plus_words.insert(query_word.content);
+                }
             }
         }
         return query;
@@ -123,7 +140,7 @@ private:
         for (const auto& plus_word : query.plus_words) {
             auto iter = word_to_document_freqs_.find(plus_word);
             if (iter != word_to_document_freqs_.end()) {
-                const double idf = log((double)document_count_ / iter->second.size());
+                const double idf = log(document_count_ * 1.0 / iter->second.size());
                 for (const auto& [document_id, tf] : iter->second) {
                     doc_to_relevance[document_id] += tf * idf;
                 }
