@@ -101,6 +101,13 @@ public:
                                 });
     }
 
+    vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus document_status) const {
+        return FindTopDocuments(raw_query,
+                                [document_status](int document_id, DocumentStatus status, int rating) {
+                                    return status == document_status;
+                                });
+    }
+
     int GetDocumentCount() const {
         return documents_.size();
     }
@@ -109,18 +116,20 @@ public:
         const Query query = ParseQuery(raw_query);
         vector<string> matched_words;
         for (const string& word : query.plus_words) {
-            if (word_to_document_freqs_.count(word) == 0) {
+            auto iter = word_to_document_freqs_.find(word);
+            if (iter == word_to_document_freqs_.end()) {
                 continue;
             }
-            if (word_to_document_freqs_.at(word).count(document_id)) {
+            if (iter->second.count(document_id)) {
                 matched_words.push_back(word);
             }
         }
         for (const string& word : query.minus_words) {
-            if (word_to_document_freqs_.count(word) == 0) {
+            auto iter = word_to_document_freqs_.find(word);
+            if (iter == word_to_document_freqs_.end()) {
                 continue;
             }
-            if (word_to_document_freqs_.at(word).count(document_id)) {
+            if (iter->second.count(document_id)) {
                 matched_words.clear();
                 break;
             }
