@@ -380,12 +380,15 @@ void TestSortingDocumentsByRelevance() {
     server.AddDocument(6, "cat and dog live in the house"s, DocumentStatus::ACTUAL, ratings);
     server.AddDocument(4, "cat and dog and bird live in the house"s, DocumentStatus::ACTUAL, ratings);
     const auto found_docs = server.FindTopDocuments("cat dog bird"s);
-    vector<int> result;
-    for_each(found_docs.begin(), found_docs.end(),
-             [&result](const auto& elem) {
-                 result.push_back(elem.id);
-             });
-    const vector<int> answer = {4, 6, 2};
+    vector<double> result;
+    for (const auto& document :  found_docs) {
+        result.push_back(document.relevance);
+    }
+    vector<double> answer = result;
+    sort(answer.begin(), answer.end(),
+         [](double x, double y) {
+            return x > y;
+         });
     ASSERT_EQUAL(result, answer);
 }
 
@@ -433,9 +436,29 @@ void TestFindTopDocumentsWithPredicate() {
         ASSERT_EQUAL(found_docs[0].id, 3);
         ASSERT_EQUAL(found_docs[1].id, 2);
     }
+}
+
+void TestFindTopDocumentsWithSpecifiedStatus() {
+    SearchServer server;
+    server.AddDocument(1, "nobody lives in the house"s, DocumentStatus::IRRELEVANT, { 0 });
+    server.AddDocument(2, "cat lives in the house"s, DocumentStatus::BANNED, { 5 });
+    server.AddDocument(3, "cat and dog live in the house"s, DocumentStatus::REMOVED, { 5 });
+    server.AddDocument(4, "cat and dog and bird live in the house"s, DocumentStatus::ACTUAL, { 4 });
     {
         const auto found_docs = server.FindTopDocuments("house"s,DocumentStatus::IRRELEVANT);
         ASSERT_EQUAL_HINT(found_docs[0].id, 1, "A relevant document with a specified status must be found"s);
+    }
+    {
+        const auto found_docs = server.FindTopDocuments("house"s,DocumentStatus::BANNED);
+        ASSERT_EQUAL_HINT(found_docs[0].id, 2, "A relevant document with a specified status must be found"s);
+    }
+    {
+        const auto found_docs = server.FindTopDocuments("house"s,DocumentStatus::REMOVED);
+        ASSERT_EQUAL_HINT(found_docs[0].id, 3, "A relevant document with a specified status must be found"s);
+    }
+    {
+        const auto found_docs = server.FindTopDocuments("house"s,DocumentStatus::ACTUAL);
+        ASSERT_EQUAL_HINT(found_docs[0].id, 4, "A relevant document with a specified status must be found"s);
     }
 }
 
@@ -463,6 +486,7 @@ void TestSearchServer() {
     RUN_TEST(TestSortingDocumentsByRelevance);
     RUN_TEST(TestDocumentRating);
     RUN_TEST(TestFindTopDocumentsWithPredicate);
+    RUN_TEST(TestFindTopDocumentsWithSpecifiedStatus);
     RUN_TEST(TestCorrectnessRelevance);
 }
 
