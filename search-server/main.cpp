@@ -294,9 +294,9 @@ void AssertImpl(bool value, const string& expr_str_repr, const string& file_name
     }
 }
 
-#define ASSERT(expr) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, ""s)
+#define ASSERT(expr) AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, ""s)
 
-#define ASSERT_HINT(expr, hint) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
+#define ASSERT_HINT(expr, hint) AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
 template <typename Func>
 void RunTestImpl(Func func, const string& func_name) {
