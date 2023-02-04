@@ -263,12 +263,9 @@ private:
     };
 
     QueryWord ParseQueryWord(string word) const {
-        if (word[word.size() - 1] == '-') {
-            throw invalid_argument("Incorrect form of minus words"s);
-        }
         bool is_minus = word[0] == '-';
         if (is_minus) {
-            if (word[1] == '-') {
+            if (word.size() == 1 || word[1] == '-') {
                 throw invalid_argument("Incorrect form of minus words"s);
             }
             word = word.substr(1);
@@ -494,9 +491,9 @@ void TestExcludeDocumentsWithMinusWords() {
     {
         ASSERT_THROW(server.FindTopDocuments("cat -"s), invalid_argument);
         ASSERT_THROW(server.FindTopDocuments("cat --"s), invalid_argument);
-        ASSERT_THROW(server.FindTopDocuments("cat -dog-"s), invalid_argument);
-        ASSERT_THROW(server.FindTopDocuments("cat -d-o-g-"s), invalid_argument);
-        ASSERT_THROW(server.FindTopDocuments("cat-"s), invalid_argument);
+        server.FindTopDocuments("cat-"s);
+        server.FindTopDocuments("cat -dog-"s);
+        server.FindTopDocuments("cat -d-o-g"s);
         ASSERT_THROW(server.FindTopDocuments("ca\x12t"s), invalid_argument);
     }
 }
