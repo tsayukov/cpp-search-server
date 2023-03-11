@@ -1,4 +1,5 @@
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -11,8 +12,19 @@ using namespace std;
 
 // UNIT TEST FRAMEWORK
 
+namespace {
 template <typename Container>
-std::ostream& PrintContainer(std::ostream& os, const Container& container, const std::string& sep = ", "s) {
+std::ostream& PrintContainer(std::ostream& os, const Container& container, const std::string& sep = ", "s);
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
+    os << "["s;
+    PrintContainer(os, vector);
+    return os << "]"s;
+}
+
+template <typename Container>
+std::ostream& PrintContainer(std::ostream& os, const Container& container, const std::string& sep) {
     auto it = std::begin(container);
     const auto end_it = std::end(container);
     if (it == end_it) {
@@ -24,13 +36,6 @@ std::ostream& PrintContainer(std::ostream& os, const Container& container, const
         os << sep << *it;
     }
     return os;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
-    os << "["s;
-    PrintContainer(os, vec);
-    return os << "]"s;
 }
 
 template <typename T, typename U>
@@ -79,8 +84,8 @@ void AssertImpl(bool value, const std::string& value_str_repr,
         std::cerr << "ASSERT("s << #func << ") failed. "s;                               \
         std::cerr << #exception << "must be thrown."s << std::endl;                      \
         abort();                                                                         \
-    } catch (const exception&) {                                                    \
-        } catch (...) {                                                                  \
+    } catch (const exception&) {                                                         \
+    } catch (...) {                                                                      \
         std::cerr << __FILE__ << "("s << __LINE__ << "): "s << __FUNCTION__ << ": "s;    \
         std::cerr << "ASSERT("s << #func << ") failed. "s;                               \
         std::cerr << "Incorrect exception. Expect "s << #exception << "."s << std::endl; \
@@ -94,6 +99,7 @@ void RunTestImpl(Func func, const std::string& func_name) {
 }
 
 #define RUN_TEST(func) RunTestImpl((func), #func)
+} // the end of the anonymous namespace
 
 // UNIT TESTS
 
@@ -306,6 +312,42 @@ void TestCorrectnessRelevance() {
     }
 }
 
+template<typename T>
+std::vector<std::vector<T>> PaginateIntoVectors(const std::vector<T>& source, const size_t page_size) {
+    std::vector<std::vector<T>> paged_vector;
+    auto pages = Paginate(source, page_size);
+    for (auto page = pages.begin(); page != pages.end(); ++page) {
+        paged_vector.emplace_back(page.begin(), page.end());
+    }
+    return paged_vector;
+}
+
+void TestPaginator() {
+    {
+        const std::vector<int> empty_vector;
+        const std::vector<std::vector<int>> res = {};
+        ASSERT_EQUAL(PaginateIntoVectors(empty_vector, 10), res);
+    }
+    std::vector<int> vec(10);
+    std::iota(vec.begin(), vec.end(), 1);
+    {
+        const std::vector<std::vector<int>> res = {};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 0), res);
+    }
+    {
+        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 10), res);
+    }
+    {
+        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8}, {9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 8), res);
+    }
+    {
+        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 1'000'000'000), res);
+    }
+}
+
 void TestSearchServer() {
     RUN_TEST(TestConstructors);
     RUN_TEST(TestGetDocumentId);
@@ -318,6 +360,7 @@ void TestSearchServer() {
     RUN_TEST(TestFindTopDocumentsWithPredicate);
     RUN_TEST(TestFindTopDocumentsWithSpecifiedStatus);
     RUN_TEST(TestCorrectnessRelevance);
+    RUN_TEST(TestPaginator);
 }
 
 int main() {
