@@ -41,31 +41,9 @@ public:
 
     int GetDocumentCount() const noexcept;
 
-    class ConstIteratorOverKeys {
-    public:
-        using iterator_category = Indices::const_iterator::iterator_category;
-        using value_type = Indices::const_iterator::value_type;
-        using difference_type = Indices::const_iterator::difference_type;
-        using pointer = Indices::const_iterator::pointer;
-        using reference = Indices::const_iterator::reference;
-        
-        explicit ConstIteratorOverKeys(const Indices::const_iterator& iterator) noexcept;
+    std::set<int>::const_iterator begin() const noexcept;
 
-        Indices::key_type operator*() const noexcept;
-
-        ConstIteratorOverKeys& operator++() noexcept;
-
-        ConstIteratorOverKeys& operator--() noexcept;
-
-        bool operator!=(const ConstIteratorOverKeys& rhs);
-
-    private:
-        Indices::const_iterator iterator_;
-    };
-
-    ConstIteratorOverKeys begin() const noexcept;
-
-    ConstIteratorOverKeys end() const noexcept;
+    std::set<int>::const_iterator end() const noexcept;
 
     void AddDocument(int document_id, const std::string& document, DocumentStatus status,
                      const std::vector<int>& ratings);
@@ -87,10 +65,9 @@ public:
 private:
     std::set<std::string> stop_words_;
 
+    std::set<int> document_ids_;
     Indices documents_;
     ReverseIndices word_to_document_frequencies_;
-
-    inline static const std::map<std::string, double> EMPTY_MAP;
 
     static void StringHasNotAnyForbiddenChars(const std::string& s);
 

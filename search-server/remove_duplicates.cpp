@@ -1,5 +1,5 @@
+#include <algorithm>
 #include <iostream>
-#include <map>
 #include <set>
 #include <string>
 
@@ -8,23 +8,23 @@
 void RemoveDuplicates(SearchServer &server) {
     using namespace std::string_literals;
 
-    std::map<std::set<std::string>, std::set<int>> duplicate_counter;
+    std::set<int> ids_to_remove;
+    std::set<std::set<std::string>> documents;
     for (const auto id : server) {
         std::set<std::string> words;
         const auto& word_frequencies = server.GetWordFrequencies(id);
-        for (const auto& [word, _] : word_frequencies) {
-            words.insert(word);
+        std::transform(word_frequencies.begin(), word_frequencies.end(),
+                       std::inserter(words, words.end()),
+                       [](const auto& key_value) { return key_value.first; });
+        if (documents.count(words) == 0) {
+            documents.insert(words);
+        } else {
+            ids_to_remove.insert(id);
         }
-        duplicate_counter[words].insert(id);
     }
 
-    for (auto& [_, ids] : duplicate_counter) {
-        while (ids.size() > 1) {
-            auto pos = --(ids.end());
-            const auto id = *pos;
-            ids.erase(pos);
-            server.RemoveDocument(id);
-            std::cout << "Found duplicate document id "s << id << "\n"s;
-        }
+    for (const auto& id : ids_to_remove) {
+        server.RemoveDocument(id);
+        std::cout << "Found duplicate document id "s << id << "\n"s;
     }
 }

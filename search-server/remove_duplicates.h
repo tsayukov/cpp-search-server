@@ -4,4 +4,4 @@
 
 #include "search_server.h"
 
-void RemoveDuplicates(SearchServer& server);
+void RemoveDuplicates(SearchServer& key_value);

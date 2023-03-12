@@ -13,36 +13,12 @@ int SearchServer::GetDocumentCount() const noexcept {
     return documents_.size();
 }
 
-SearchServer::ConstIteratorOverKeys::ConstIteratorOverKeys(const Indices::const_iterator& iterator) noexcept
-        : iterator_(iterator) {
+std::set<int>::const_iterator SearchServer::begin() const noexcept {
+    return document_ids_.begin();
 }
 
-int SearchServer::ConstIteratorOverKeys::operator*() const noexcept {
-    return iterator_->first;
-}
-
-SearchServer::ConstIteratorOverKeys&
-SearchServer::ConstIteratorOverKeys::operator++() noexcept {
-    ++iterator_;
-    return *this;
-}
-
-SearchServer::ConstIteratorOverKeys&
-SearchServer::ConstIteratorOverKeys::operator--() noexcept {
-    --iterator_;
-    return *this;
-}
-
-bool SearchServer::ConstIteratorOverKeys::operator!=(const ConstIteratorOverKeys& rhs) {
-    return iterator_ != rhs.iterator_;
-}
-
-SearchServer::ConstIteratorOverKeys SearchServer::begin() const noexcept {
-    return ConstIteratorOverKeys(documents_.begin());
-}
-
-SearchServer::ConstIteratorOverKeys SearchServer::end() const noexcept {
-    return ConstIteratorOverKeys(documents_.end());
+std::set<int>::const_iterator SearchServer::end() const noexcept {
+    return document_ids_.end();
 }
 
 void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status,
@@ -50,10 +26,12 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
     DocumentIdIsNotNegative(document_id);
     DocumentIdDoesntExist(document_id);
 
-    const auto words = SplitIntoWordsNoStop(document);
+    document_ids_.insert(document_id);
     auto& document_data = documents_[document_id];
     document_data.rating = ComputeAverageRating(ratings);
     document_data.status = status;
+
+    const auto words = SplitIntoWordsNoStop(document);
     const double inv_size = 1.0 / static_cast<double>(words.size());
     for (const auto& word : words) {
         word_to_document_frequencies_[word][document_id] += inv_size;
@@ -75,6 +53,7 @@ void SearchServer::RemoveDocument(int document_id) {
         }
 
         documents_.erase(doc_iter);
+        document_ids_.erase(document_id);
     }
 }
 
@@ -119,11 +98,12 @@ SearchServer::MatchDocument(const std::string& raw_query, int document_id) const
 }
 
 const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
-    if (auto it = documents_.find(document_id); it == documents_.end()) {
-        return SearchServer::EMPTY_MAP;
-    } else {
+    static const std::map<std::string, double> empty_map;
+
+    if (auto it = documents_.find(document_id); it != documents_.end()) {
         return it->second.word_frequencies;
     }
+    return empty_map;
 }
 
 void SearchServer::StringHasNotAnyForbiddenChars(const std::string& s) {
