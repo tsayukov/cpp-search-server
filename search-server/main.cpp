@@ -1,14 +1,18 @@
 #include <iostream>
 #include <numeric>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "paginator.h"
+#include "remove_duplicates.h"
 #include "request_queue.h"
 #include "search_server.h"
+#include "test_example_functions.h"
 
 using namespace std;
+using namespace std::string_literals;
 
 // UNIT TEST FRAMEWORK
 
@@ -21,6 +25,25 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
     os << "["s;
     PrintContainer(os, vector);
     return os << "]"s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::set<T>& set) {
+    os << "{"s;
+    PrintContainer(os, set);
+    return os << "}"s;
+}
+
+template <typename K, typename V>
+std::ostream& operator<<(std::ostream& os, const std::map<K, V>& map) {
+    os << "{"s;
+    PrintContainer(os, map);
+    return os << "}"s;
+}
+
+template <typename F, typename S>
+std::ostream& operator<<(std::ostream& os, const std::pair<F, S>& pair) {
+    return os << pair.first << ": "s << pair.second;
 }
 
 template <typename Container>
@@ -103,26 +126,37 @@ void RunTestImpl(Func func, const std::string& func_name) {
 
 // UNIT TESTS
 
+namespace unit_tests {
 void TestConstructors() {
     ASSERT_THROW(SearchServer("in \x12the"s), std::invalid_argument);
     ASSERT_THROW(SearchServer(std::vector<std::string>{"in"s, "\x12the"s}), std::invalid_argument);
 }
 
-void TestGetDocumentId() {
-    SearchServer server(""s);
-    ASSERT_THROW(server.GetDocumentId(-1), std::out_of_range);
-    ASSERT_THROW(server.GetDocumentId(0), std::out_of_range);
-
-    const std::vector<int> ratings = {1, 2, 3};
-    server.AddDocument(5, "nobody lives in the house"s, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(2, "cat lives in the house"s, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(6, "cat and dog live in the house"s, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(4, "cat and dog and bird live in the house"s, DocumentStatus::ACTUAL, ratings);
-    ASSERT_THROW(server.GetDocumentId(-1), std::out_of_range);
-    ASSERT_EQUAL(server.GetDocumentId(0), 5);
-    ASSERT_EQUAL(server.GetDocumentId(2), 6);
-    ASSERT_EQUAL(server.GetDocumentId(3), 4);
-    ASSERT_THROW(server.GetDocumentId(4), std::out_of_range);
+void TestRangeBasedForLoop() {
+    {
+        const SearchServer empty_server(""s);
+        std::vector<int> res;
+        for (const auto id : empty_server) {
+            res.push_back(id);
+        }
+        ASSERT(res.empty());
+    }
+    {
+        const std::vector<int> ratings = {1, 2, 3};
+        SearchServer server("and in with"s);
+        server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(1, "black cat"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(5, "blue cat"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(10, "another blue cat"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(100, "blue cat and blue kitty"s, DocumentStatus::ACTUAL, ratings);
+        std::vector<int> res;
+        for (const auto id : server) {
+            res.push_back(id);
+        }
+        std::sort(res.begin(), res.end());
+        std::vector<int> answer = {0, 1, 5, 10, 100};
+        ASSERT_EQUAL(res, answer);
+    }
 }
 
 void TestAddDocument() {
@@ -144,6 +178,57 @@ void TestAddDocument() {
                 std::invalid_argument);
         auto found_docs = server.FindTopDocuments("in"s);
         ASSERT(found_docs.empty());
+    }
+}
+
+void TestRemoveDocument() {
+    SearchServer server("and in with"s);
+    {
+        server.RemoveDocument(1);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        server.RemoveDocument(100);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+    }
+    const std::vector<int> ratings = {1, 2, 3};
+    server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(1, "black cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(5, "blue cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(10, "another blue cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(100, "blue cat and blue kitty"s, DocumentStatus::ACTUAL, ratings);
+    {
+        server.RemoveDocument(2);
+        std::vector<int> res(server.begin(), server.end());
+        std::sort(res.begin(), res.end());
+        std::vector<int> answer = {0, 1, 5, 10, 100};
+        ASSERT_EQUAL(res, answer);
+    }
+    {
+        server.RemoveDocument(1);
+        std::vector<int> res(server.begin(), server.end());
+        std::sort(res.begin(), res.end());
+        std::vector<int> answer = {0, 5, 10, 100};
+        ASSERT_EQUAL(res, answer);
+    }
+}
+
+void TestGetWordFrequencies() {
+    SearchServer server("and in with"s);
+    {
+        ASSERT(server.GetWordFrequencies(1).empty());
+    }
+    const std::vector<int> ratings = {1, 2, 3};
+    server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(1, "black cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(5, "blue cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(10, "another blue cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(100, "blue cat and blue kitty"s, DocumentStatus::ACTUAL, ratings);
+    {
+        std::map<std::string, double> answer = {{"white"s, 1.0 / 2}, {"cat"s, 1.0 / 2}};
+        ASSERT_EQUAL(server.GetWordFrequencies(0), answer);
+    }
+    {
+        std::map<std::string, double> answer = {{"blue"s, 2.0 / 4}, {"cat"s, 1.0 / 4}, {"kitty"s, 1.0 / 4}};
+        ASSERT_EQUAL(server.GetWordFrequencies(100), answer);
     }
 }
 
@@ -312,6 +397,42 @@ void TestCorrectnessRelevance() {
     }
 }
 
+void TestRemoveDuplicates() {
+    SearchServer server("and in with"s);
+    {
+        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        RemoveDuplicates(server);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+    }
+    const std::vector<int> ratings = {1, 2, 3};
+    server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(1, "black cat"s, DocumentStatus::ACTUAL, ratings);
+    {
+        ASSERT_EQUAL(server.GetDocumentCount(), 2u);
+        RemoveDuplicates(server);
+        ASSERT_EQUAL(server.GetDocumentCount(), 2u);
+    }
+    {
+        server.AddDocument(2, "black cat"s, DocumentStatus::ACTUAL, ratings);
+        RemoveDuplicates(server);
+        std::vector<int> res(server.begin(), server.end());
+        std::sort(res.begin(), res.end());
+        const std::vector<int> answer = {0, 1};
+        ASSERT_EQUAL(res, answer);
+    }
+    {
+        server.AddDocument(2, "black cat"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(3, "cat black"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(4, "cat in black"s, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(5, "black cat and black cat"s, DocumentStatus::ACTUAL, ratings);
+        RemoveDuplicates(server);
+        std::vector<int> res(server.begin(), server.end());
+        std::sort(res.begin(), res.end());
+        const std::vector<int> answer = {0, 1};
+        ASSERT_EQUAL(res, answer);
+    }
+}
+
 template<typename T>
 std::vector<std::vector<T>> PaginateIntoVectors(const std::vector<T>& source, const size_t page_size) {
     std::vector<std::vector<T>> paged_vector;
@@ -325,33 +446,72 @@ std::vector<std::vector<T>> PaginateIntoVectors(const std::vector<T>& source, co
 void TestPaginator() {
     {
         const std::vector<int> empty_vector;
-        const std::vector<std::vector<int>> res = {};
-        ASSERT_EQUAL(PaginateIntoVectors(empty_vector, 10), res);
+        const std::vector<std::vector<int>> answer = {};
+        ASSERT_EQUAL(PaginateIntoVectors(empty_vector, 10), answer);
     }
     std::vector<int> vec(10);
     std::iota(vec.begin(), vec.end(), 1);
     {
-        const std::vector<std::vector<int>> res = {};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 0), res);
+        const std::vector<std::vector<int>> answer = {};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 0), answer);
     }
     {
-        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 10), res);
+        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 10), answer);
     }
     {
-        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8}, {9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 8), res);
+        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8}, {9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 8), answer);
     }
     {
-        const std::vector<std::vector<int>> res = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 1'000'000'000), res);
+        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
+        ASSERT_EQUAL(PaginateIntoVectors(vec, 1'000'000'000), answer);
     }
 }
 
+void AddManyRandomDocuments(SearchServer& server, unsigned int documents, unsigned int diversity_ratio) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::vector<std::string> pets = {"dog"s, "goat"s, "pig"s, "sheep"s, "cat"s, "chicken"s, "duck"s};
+    std::uniform_int_distribution<std::size_t> pet_distribution(0, pets.size() - 1);
+
+    std::uniform_int_distribution<unsigned int> name_distribution(0, diversity_ratio);
+
+    const std::vector<int> ratings = {1, 2, 3};
+    for (unsigned int id = 0; id < documents; ++id) {
+        const std::string document = pets[pet_distribution(gen)]
+                                   + " "s
+                                   + std::to_string(name_distribution(gen))
+                                   + " in the "s
+                                   + std::to_string(name_distribution(gen))
+                                   + "th street"s;
+        server.AddDocument(static_cast<int>(id), document, DocumentStatus::ACTUAL, ratings);
+    }
+}
+
+void ProfilingSearchServer() {
+    SearchServer server("and in with"s);
+    AddManyRandomDocuments(server, 100'000, 1'000);
+    std::cerr << GetWordFrequencies(server, 50'000) << std::endl;
+    RemoveDocument(server, 50'000);
+}
+
+void ProfilingRemoveDuplicates() {
+    SearchServer server("and in with"s);
+    AddManyRandomDocuments(server, 1'000, 10);
+    RemoveDuplicatesWithProfiling(server);
+}
+} // the end of the namespace `unit_tests`
+
 void TestSearchServer() {
+    using namespace unit_tests;
+
     RUN_TEST(TestConstructors);
-    RUN_TEST(TestGetDocumentId);
+    RUN_TEST(TestRangeBasedForLoop);
     RUN_TEST(TestAddDocument);
+    RUN_TEST(TestRemoveDocument);
+    RUN_TEST(TestGetWordFrequencies);
     RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
     RUN_TEST(TestExcludeDocumentsWithMinusWords);
     RUN_TEST(TestMatchingDocuments);
@@ -360,7 +520,11 @@ void TestSearchServer() {
     RUN_TEST(TestFindTopDocumentsWithPredicate);
     RUN_TEST(TestFindTopDocumentsWithSpecifiedStatus);
     RUN_TEST(TestCorrectnessRelevance);
+    RUN_TEST(TestRemoveDuplicates);
     RUN_TEST(TestPaginator);
+
+    RUN_TEST(ProfilingSearchServer);
+    RUN_TEST(ProfilingRemoveDuplicates);
 }
 
 int main() {

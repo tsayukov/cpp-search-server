@@ -23,6 +23,16 @@ enum class DocumentStatus {
 };
 
 class SearchServer {
+private:
+    struct DocumentData {
+        std::map<std::string, double> word_frequencies;
+        int rating;
+        DocumentStatus status;
+    };
+
+    using Indices = std::map<int, DocumentData>;
+    using ReverseIndices = std::map<std::string, std::map<int, double>>;
+
 public:
     template<typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words);
@@ -31,10 +41,36 @@ public:
 
     int GetDocumentCount() const noexcept;
 
-    int GetDocumentId(int index) const;
+    class ConstIteratorOverKeys {
+    public:
+        using iterator_category = Indices::const_iterator::iterator_category;
+        using value_type = Indices::const_iterator::value_type;
+        using difference_type = Indices::const_iterator::difference_type;
+        using pointer = Indices::const_iterator::pointer;
+        using reference = Indices::const_iterator::reference;
+        
+        explicit ConstIteratorOverKeys(const Indices::const_iterator& iterator) noexcept;
+
+        Indices::key_type operator*() const noexcept;
+
+        ConstIteratorOverKeys& operator++() noexcept;
+
+        ConstIteratorOverKeys& operator--() noexcept;
+
+        bool operator!=(const ConstIteratorOverKeys& rhs);
+
+    private:
+        Indices::const_iterator iterator_;
+    };
+
+    ConstIteratorOverKeys begin() const noexcept;
+
+    ConstIteratorOverKeys end() const noexcept;
 
     void AddDocument(int document_id, const std::string& document, DocumentStatus status,
                      const std::vector<int>& ratings);
+
+    void RemoveDocument(int document_id);
 
     template<typename Predicate>
     std::vector<Document> FindTopDocuments(const std::string& raw_query, Predicate predicate) const;
@@ -46,16 +82,15 @@ public:
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query,
                                                                        int document_id) const;
 
-private:
-    struct DocumentData {
-        int rating;
-        DocumentStatus status;
-    };
+    const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 
+private:
     std::set<std::string> stop_words_;
-    std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, DocumentData> documents_;
-    std::vector<int> ids_;
+
+    Indices documents_;
+    ReverseIndices word_to_document_frequencies_;
+
+    inline static const std::map<std::string, double> EMPTY_MAP;
 
     static void StringHasNotAnyForbiddenChars(const std::string& s);
 
@@ -144,26 +179,28 @@ template<typename Predicate>
 std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Predicate predicate) const {
     std::map<int, double> doc_to_relevance;
     for (const auto& plus_word : query.plus_words) {
-        auto iter = word_to_document_freqs_.find(plus_word);
-        if (iter != word_to_document_freqs_.end()) {
-            const auto& document_freqs = iter->second;
-            const double idf = std::log(GetDocumentCount() * 1.0 / document_freqs.size());
-            for (const auto& [document_id, tf] : document_freqs) {
-                const auto& document_data = documents_.at(document_id);
-                if (predicate(document_id, document_data.status, document_data.rating)) {
-                    doc_to_relevance[document_id] += tf * idf;
-                }
+        auto iter = word_to_document_frequencies_.find(plus_word);
+        if (iter == word_to_document_frequencies_.end()) {
+            continue;
+        }
+        const auto& document_frequencies = iter->second;
+        const double idf = std::log(GetDocumentCount() * 1.0 / document_frequencies.size());
+        for (const auto& [document_id, tf] : document_frequencies) {
+            const auto& document_data = documents_.at(document_id);
+            if (predicate(document_id, document_data.status, document_data.rating)) {
+                doc_to_relevance[document_id] += tf * idf;
             }
         }
     }
 
     for (const auto& minus_word : query.minus_words) {
-        auto iter = word_to_document_freqs_.find(minus_word);
-        if (iter != word_to_document_freqs_.end()) {
-            const auto& document_freqs = iter->second;
-            for (const auto [document_id, _] : document_freqs) {
-                doc_to_relevance.erase(document_id);
-            }
+        auto iter = word_to_document_frequencies_.find(minus_word);
+        if (iter == word_to_document_frequencies_.end()) {
+            continue;
+        }
+        const auto& document_frequencies = iter->second;
+        for (const auto [document_id, _] : document_frequencies) {
+            doc_to_relevance.erase(document_id);
         }
     }
 

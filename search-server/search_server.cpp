@@ -3,7 +3,7 @@
 #include <numeric>
 #include <stdexcept>
 
-using std::operator""s;
+using namespace std::string_literals;
 
 SearchServer::SearchServer(const std::string& stop_words)
         : SearchServer(SplitIntoWords(stop_words)) {
@@ -13,29 +13,69 @@ int SearchServer::GetDocumentCount() const noexcept {
     return documents_.size();
 }
 
-int SearchServer::GetDocumentId(int index) const {
-    if (index < 0 || static_cast<size_t>(index) >= ids_.size()) {
-        throw std::out_of_range(
-                "The passed index is out of range "s
-                "["s + std::to_string(0) + "; "s + std::to_string(GetDocumentCount()) + "). "s
-                "Given: "s + std::to_string(index));
-    }
+SearchServer::ConstIteratorOverKeys::ConstIteratorOverKeys(const Indices::const_iterator& iterator) noexcept
+        : iterator_(iterator) {
+}
 
-    return ids_.at(index);
+int SearchServer::ConstIteratorOverKeys::operator*() const noexcept {
+    return iterator_->first;
+}
+
+SearchServer::ConstIteratorOverKeys&
+SearchServer::ConstIteratorOverKeys::operator++() noexcept {
+    ++iterator_;
+    return *this;
+}
+
+SearchServer::ConstIteratorOverKeys&
+SearchServer::ConstIteratorOverKeys::operator--() noexcept {
+    --iterator_;
+    return *this;
+}
+
+bool SearchServer::ConstIteratorOverKeys::operator!=(const ConstIteratorOverKeys& rhs) {
+    return iterator_ != rhs.iterator_;
+}
+
+SearchServer::ConstIteratorOverKeys SearchServer::begin() const noexcept {
+    return ConstIteratorOverKeys(documents_.begin());
+}
+
+SearchServer::ConstIteratorOverKeys SearchServer::end() const noexcept {
+    return ConstIteratorOverKeys(documents_.end());
 }
 
 void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status,
-                 const std::vector<int>& ratings) {
+                               const std::vector<int>& ratings) {
     DocumentIdIsNotNegative(document_id);
     DocumentIdDoesntExist(document_id);
 
     const auto words = SplitIntoWordsNoStop(document);
+    auto& document_data = documents_[document_id];
+    document_data.rating = ComputeAverageRating(ratings);
+    document_data.status = status;
     const double inv_size = 1.0 / static_cast<double>(words.size());
     for (const auto& word : words) {
-        word_to_document_freqs_[word][document_id] += inv_size;
+        word_to_document_frequencies_[word][document_id] += inv_size;
+        document_data.word_frequencies[word] += inv_size;
     }
-    ids_.push_back(document_id);
-    documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    if (auto doc_iter = documents_.find(document_id); doc_iter != documents_.end()) {
+        const auto& document_data = doc_iter->second;
+        for (const auto& [word, _] : document_data.word_frequencies) {
+            auto word_iter = word_to_document_frequencies_.find(word);
+            auto& documents_with_that_word = word_iter->second;
+            documents_with_that_word.erase(document_id);
+
+            if (documents_with_that_word.empty()) {
+                word_to_document_frequencies_.erase(word_iter);
+            }
+        }
+
+        documents_.erase(doc_iter);
+    }
 }
 
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
@@ -50,36 +90,40 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_quer
     return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
 }
 
-std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument(const std::string& raw_query,
-                                                                                 int document_id) const {
+std::tuple<std::vector<std::string>, DocumentStatus>
+SearchServer::MatchDocument(const std::string& raw_query, int document_id) const {
     DocumentIdIsNotNegative(document_id);
     const auto query = ParseQuery(raw_query);
 
     std::vector<std::string> matched_words;
     for (const auto& word : query.plus_words) {
-        auto iter = word_to_document_freqs_.find(word);
-        if (iter == word_to_document_freqs_.end()) {
+        auto iter = word_to_document_frequencies_.find(word);
+        if (iter == word_to_document_frequencies_.end()) {
             continue;
         }
-        if (const auto& document_freqs = iter->second;
-                document_freqs.count(document_id) > 0)
-        {
+        if (const auto& document_frequencies = iter->second; document_frequencies.count(document_id) > 0) {
             matched_words.push_back(word);
         }
     }
     for (const auto& word : query.minus_words) {
-        auto iter = word_to_document_freqs_.find(word);
-        if (iter == word_to_document_freqs_.end()) {
+        auto iter = word_to_document_frequencies_.find(word);
+        if (iter == word_to_document_frequencies_.end()) {
             continue;
         }
-        if (const auto& document_freqs = iter->second;
-                document_freqs.count(document_id) > 0)
-        {
+        if (const auto& document_frequencies = iter->second; document_frequencies.count(document_id) > 0) {
             matched_words.clear();
             break;
         }
     }
     return {matched_words, documents_.at(document_id).status};
+}
+
+const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    if (auto it = documents_.find(document_id); it == documents_.end()) {
+        return SearchServer::EMPTY_MAP;
+    } else {
+        return it->second.word_frequencies;
+    }
 }
 
 void SearchServer::StringHasNotAnyForbiddenChars(const std::string& s) {
