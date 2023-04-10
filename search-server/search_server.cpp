@@ -60,7 +60,7 @@ void SearchServer::RemoveDocument(int document_id) {
 std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
                                                      DocumentStatus document_status) const {
     return FindTopDocuments(raw_query,
-                            [document_status](int document_id, DocumentStatus status, int rating) {
+                            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
                                 return status == document_status;
                             });
 }

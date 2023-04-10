@@ -185,9 +185,9 @@ void TestRemoveDocument() {
     SearchServer server("and in with"s);
     {
         server.RemoveDocument(1);
-        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0);
         server.RemoveDocument(100);
-        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0);
     }
     const std::vector<int> ratings = {1, 2, 3};
     server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
@@ -341,7 +341,7 @@ void TestFindTopDocumentsWithPredicate() {
     {
         auto found_docs = server.FindTopDocuments(
                 "cat dog bird"s,
-                [](auto id, auto status, auto rating) {
+                [](auto id, auto, auto) {
                     return id >= 3;
                 });
         ASSERT_EQUAL(found_docs[0].id, 4);
@@ -350,7 +350,7 @@ void TestFindTopDocumentsWithPredicate() {
     {
         auto found_docs = server.FindTopDocuments(
                 "cat dog bird"s,
-                [](auto id, auto status, auto rating) {
+                [](auto, auto, auto rating) {
                     return rating == 5;
                 });
         ASSERT_EQUAL(found_docs[0].id, 3);
@@ -400,17 +400,17 @@ void TestCorrectnessRelevance() {
 void TestRemoveDuplicates() {
     SearchServer server("and in with"s);
     {
-        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0);
         RemoveDuplicates(server);
-        ASSERT_EQUAL(server.GetDocumentCount(), 0u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 0);
     }
     const std::vector<int> ratings = {1, 2, 3};
     server.AddDocument(0, "white cat"s, DocumentStatus::ACTUAL, ratings);
     server.AddDocument(1, "black cat"s, DocumentStatus::ACTUAL, ratings);
     {
-        ASSERT_EQUAL(server.GetDocumentCount(), 2u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 2);
         RemoveDuplicates(server);
-        ASSERT_EQUAL(server.GetDocumentCount(), 2u);
+        ASSERT_EQUAL(server.GetDocumentCount(), 2);
     }
     {
         server.AddDocument(2, "black cat"s, DocumentStatus::ACTUAL, ratings);
