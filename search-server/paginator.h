@@ -52,9 +52,9 @@ public:
     Page<InputIterator> end() const noexcept;
 
 private:
-    InputIterator range_begin_;
-    InputIterator range_end_;
-    std::size_t page_size_;
+    const InputIterator range_begin_;
+    const InputIterator range_end_;
+    const std::size_t page_size_;
 };
 
 // Range template implementation
@@ -80,7 +80,7 @@ T Range<T>::end() const noexcept {
 // Page template implementation
 
 template<typename InputIterator>
-Page<InputIterator>::Page(InputIterator begin, InputIterator end_of_pages, std::size_t page_size) noexcept
+Page<InputIterator>::Page(InputIterator begin, const InputIterator end_of_pages, std::size_t page_size) noexcept
         : range_(begin, GetEnd(begin, end_of_pages, page_size))
         , end_of_pages_(end_of_pages)
         , size_(page_size) {
@@ -113,38 +113,40 @@ Range<InputIterator> Page<InputIterator>::operator*() const noexcept {
 }
 
 template<typename InputIterator>
-InputIterator Page<InputIterator>::GetEnd(InputIterator begin, InputIterator end_of_pages,
+InputIterator Page<InputIterator>::GetEnd(InputIterator begin, const InputIterator end_of_pages,
                                           std::size_t page_size) noexcept {
-    if (std::is_same_v<typename InputIterator::iterator_category, std::random_access_iterator_tag>) {
+    if (std::is_same_v<typename std::iterator_traits<InputIterator>::iterator_category,
+                       std::random_access_iterator_tag>) {
         if (page_size >= static_cast<std::size_t>(std::abs(end_of_pages - begin))) {
             return end_of_pages;
         }
         return begin + page_size;
     } else {
-        auto it = begin;
-        for (std::size_t count = 0; count != page_size; ++count, ++it) {
-            if (it == end_of_pages) {
+        auto iter = begin;
+        for (std::size_t count = 0; count != page_size; ++count, ++iter) {
+            if (iter == end_of_pages) {
                 break;
             }
         }
-        return it;
+        return iter;
     }
 }
 
 // The end of Page template implementation
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, Range<T> range) {
-    for (auto it = range.begin(); it != range.end(); ++it) {
-        os << *it;
+std::ostream& operator<<(std::ostream& output, Range<T> range) {
+    for (auto iter = range.begin(); iter != range.end(); ++iter) {
+        output << *iter;
     }
-    return os;
+    return output;
 }
 
 // Paginator template implementation
 
 template<typename InputIterator>
-Paginator<InputIterator>::Paginator(InputIterator range_begin, InputIterator range_end, std::size_t page_size) noexcept
+Paginator<InputIterator>::Paginator(InputIterator range_begin, const InputIterator range_end,
+                                    std::size_t page_size) noexcept
         : range_begin_(range_begin)
         , range_end_(page_size != 0 ? range_end : range_begin)
         , page_size_(page_size) {
