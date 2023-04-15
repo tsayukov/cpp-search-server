@@ -1,17 +1,16 @@
 #include "document.h"
 
-using std::operator""s;
-
 Document::Document(int id, double relevance, int rating) noexcept
         : id(id)
-        , relevance(relevance)
-        , rating(rating) {
+        , rating(rating)
+        , relevance(relevance) {
 }
 
-std::ostream& operator<<(std::ostream& os, const Document& document) {
-    return os << "{ "s
-              << "document_id = "s << document.id << ", "s
-              << "relevance = "s << document.relevance << ", "s
-              << "rating = "s << document.rating
-              << " }"s;
+std::ostream& operator<<(std::ostream& output, const Document& document) {
+    using namespace std::string_literals;
+    return output << "{ "s
+                  << "document_id = "s << document.id << ", "s
+                  << "relevance = "s << document.relevance << ", "s
+                  << "rating = "s << document.rating
+                  << " }"s;
 }
