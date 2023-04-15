@@ -1,17 +1,17 @@
+#include "remove_duplicates.h"
+
 #include <algorithm>
 #include <iostream>
 #include <set>
-#include <string>
-
-#include "remove_duplicates.h"
+#include <string_view>
 
 void RemoveDuplicates(SearchServer &server) {
     using namespace std::string_literals;
 
     std::set<int> ids_to_remove;
-    std::set<std::set<std::string>> documents;
+    std::set<std::set<std::string_view>> documents;
     for (const auto id : server) {
-        std::set<std::string> words;
+        std::set<std::string_view> words;
         const auto& word_frequencies = server.GetWordFrequencies(id);
         std::transform(word_frequencies.begin(), word_frequencies.end(),
                        std::inserter(words, words.end()),

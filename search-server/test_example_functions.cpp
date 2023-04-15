@@ -1,6 +1,6 @@
-#include "log_duration.h"
-
 #include "test_example_functions.h"
+
+#include "log_duration.h"
 
 using namespace std::string_literals;
 
@@ -27,7 +27,7 @@ std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const SearchS
     return server.MatchDocument(raw_query, document_id);
 }
 
-const std::map<std::string, double>& GetWordFrequencies(const SearchServer& server, int document_id) {
+const std::map<std::string_view, double>& GetWordFrequencies(const SearchServer& server, int document_id) {
     LOG_DURATION(__FUNCTION__ + " operation time"s);
     return server.GetWordFrequencies(document_id);
 }

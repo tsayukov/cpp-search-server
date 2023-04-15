@@ -10,6 +10,9 @@
 namespace unit_tests {
 
 using namespace std::string_literals;
+using namespace std::string_view_literals;
+
+inline constexpr double ERROR_MARGIN = 1e-6;
 
 inline void TestConstructors() {
     ASSERT_THROW(SearchServer("in \x12the"s), std::invalid_argument);
@@ -107,11 +110,11 @@ inline void TestGetWordFrequencies() {
     server.AddDocument(10, "another blue cat"s, DocumentStatus::ACTUAL, ratings);
     server.AddDocument(100, "blue cat and blue kitty"s, DocumentStatus::ACTUAL, ratings);
     {
-        std::map<std::string, double> answer = {{"white"s, 1.0 / 2}, {"cat"s, 1.0 / 2}};
+        std::map<std::string_view, double> answer = {{"white"sv, 1.0 / 2}, {"cat"sv, 1.0 / 2}};
         ASSERT_EQUAL(server.GetWordFrequencies(0), answer);
     }
     {
-        std::map<std::string, double> answer = {{"blue"s, 2.0 / 4}, {"cat"s, 1.0 / 4}, {"kitty"s, 1.0 / 4}};
+        std::map<std::string_view, double> answer = {{"blue"sv, 2.0 / 4}, {"cat"sv, 1.0 / 4}, {"kitty"sv, 1.0 / 4}};
         ASSERT_EQUAL(server.GetWordFrequencies(100), answer);
     }
 }
@@ -144,12 +147,12 @@ inline void TestExcludeDocumentsWithMinusWords() {
                           "Relevant documents without minus words must be found"s);
     }
     {
-        ASSERT_THROW(server.FindTopDocuments("cat -"s), std::invalid_argument);
-        ASSERT_THROW(server.FindTopDocuments("cat --"s), std::invalid_argument);
-        server.FindTopDocuments("cat-"s);
-        server.FindTopDocuments("cat -dog-"s);
-        server.FindTopDocuments("cat -d-o-g"s);
-        ASSERT_THROW(server.FindTopDocuments("ca\x12t"s), std::invalid_argument);
+        ASSERT_THROW((void) server.FindTopDocuments("cat -"s), std::invalid_argument);
+        ASSERT_THROW((void) server.FindTopDocuments("cat --"s), std::invalid_argument);
+        (void) server.FindTopDocuments("cat-"s);
+        (void) server.FindTopDocuments("cat -dog-"s);
+        (void) server.FindTopDocuments("cat -d-o-g"s);
+        ASSERT_THROW((void) server.FindTopDocuments("ca\x12t"s), std::invalid_argument);
     }
 }
 
