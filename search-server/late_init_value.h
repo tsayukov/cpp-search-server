@@ -3,29 +3,29 @@
 #include <type_traits>
 
 template<typename T, std::size_t N = sizeof(T)>
-class UninitializedValue {
+class LateInitValue {
 private:
     void Drop() noexcept(std::is_nothrow_destructible_v<T>) {
         if constexpr (std::is_destructible_v<T>) {
-            if (is_initialized) {
+            if (is_initialized_) {
                 Get().~T();
             }
         }
     }
 
 public:
-    UninitializedValue() noexcept = default;
+    LateInitValue() noexcept = default;
 
-    ~UninitializedValue() noexcept {
+    ~LateInitValue() noexcept {
         Drop();
     }
 
     [[nodiscard]] bool IsInitialized() const noexcept {
-        return is_initialized;
+        return is_initialized_;
     }
 
     [[nodiscard]] T& Get() noexcept {
-        return const_cast<T&>(const_cast<const UninitializedValue&>(*this).Get());
+        return const_cast<T&>(const_cast<const LateInitValue&>(*this).Get());
     }
 
     [[nodiscard]] const T& Get() const noexcept {
@@ -37,15 +37,15 @@ public:
         Drop();
         T* value_ptr = reinterpret_cast<T*>(raw_placement_);
         new (value_ptr) T(std::forward<Args...>(args)...);
-        is_initialized = true;
+        is_initialized_ = true;
     }
 
     [[nodiscard]] T&& Release() noexcept {
-        is_initialized = false;
+        is_initialized_ = false;
         return std::move(Get());
     }
 
 private:
     std::int8_t raw_placement_[N];
-    bool is_initialized = false;
+    bool is_initialized_ = false;
 };
