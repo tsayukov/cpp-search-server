@@ -1,23 +1,11 @@
 #pragma once
 
+#include "borrowed_range.h"
+
 #include <cstddef>
 #include <iterator>
 #include <ostream>
 #include <type_traits>
-
-template<typename T>
-class Range {
-public:
-    Range(T begin, T end);
-
-    T begin() const noexcept;
-
-    T end() const noexcept;
-
-private:
-    T begin_;
-    T end_;
-};
 
 template<typename InputIterator>
 class Page {
@@ -32,10 +20,10 @@ public:
 
     Page& operator++() noexcept;
 
-    Range<InputIterator> operator*() const noexcept;
+    BorrowedRange<InputIterator> operator*() const noexcept;
 
 private:
-    Range<InputIterator> range_;
+    BorrowedRange<InputIterator> range_;
     const InputIterator end_of_pages_;
     const std::size_t size_;
 
@@ -56,26 +44,6 @@ private:
     const InputIterator range_end_;
     const std::size_t page_size_;
 };
-
-// Range template implementation
-
-template<typename T>
-Range<T>::Range(T begin, T end)
-        : begin_(begin)
-        , end_(end) {
-}
-
-template<typename T>
-T Range<T>::begin() const noexcept {
-    return begin_;
-}
-
-template<typename T>
-T Range<T>::end() const noexcept {
-    return end_;
-}
-
-// The end of Range template implementation
 
 // Page template implementation
 
@@ -103,12 +71,12 @@ bool Page<InputIterator>::operator!=(Page rhs) const noexcept {
 
 template<typename InputIterator>
 Page<InputIterator>& Page<InputIterator>::operator++() noexcept {
-    range_ = Range(end(), GetEnd(range_.end(), end_of_pages_, size_));
+    range_ = BorrowedRange(end(), GetEnd(range_.end(), end_of_pages_, size_));
     return *this;
 }
 
 template<typename InputIterator>
-Range<InputIterator> Page<InputIterator>::operator*() const noexcept {
+BorrowedRange<InputIterator> Page<InputIterator>::operator*() const noexcept {
     return range_;
 }
 
@@ -135,7 +103,7 @@ InputIterator Page<InputIterator>::GetEnd(InputIterator begin, const InputIterat
 // The end of Page template implementation
 
 template<typename T>
-std::ostream& operator<<(std::ostream& output, Range<T> range) {
+std::ostream& operator<<(std::ostream& output, BorrowedRange<T> range) {
     for (auto iter = range.begin(); iter != range.end(); ++iter) {
         output << *iter;
     }
