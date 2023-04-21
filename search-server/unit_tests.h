@@ -4,11 +4,11 @@
 #include "remove_duplicates.h"
 #include "search_server.h"
 #include "paginator.h"
-
-#include <random>
+#include "late_init_value.h"
 
 namespace unit_tests {
 
+using namespace unit_test_tools;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -357,6 +357,220 @@ inline void TestPaginator() {
     }
 }
 
+namespace late_init_value_tests {
+
+enum class Movable {
+    False = false,
+    True = true,
+};
+
+enum class Copyable {
+    False = false,
+    True = true,
+};
+
+template<Movable, Copyable>
+class TestClass {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = delete;
+    TestClass& operator=(const TestClass&) noexcept = delete;
+    TestClass(TestClass&&) noexcept = delete;
+    TestClass& operator=(TestClass&&) noexcept = delete;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::True, Copyable::True> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = default;
+    TestClass& operator=(const TestClass&) noexcept = default;
+    TestClass(TestClass&&) noexcept = default;
+    TestClass& operator=(TestClass&&) noexcept = default;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::True, Copyable::False> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = delete;
+    TestClass& operator=(const TestClass&) noexcept = delete;
+    TestClass(TestClass&&) noexcept = default;
+    TestClass& operator=(TestClass&&) noexcept = default;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::False, Copyable::True> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = default;
+    TestClass& operator=(const TestClass&) noexcept = default;
+    TestClass(TestClass&&) noexcept = delete;
+    TestClass& operator=(TestClass&&) noexcept = delete;
+    ~TestClass() = default;
+};
+
+void TestSet() {
+    {
+        LateInitValue<int> value;
+        ASSERT(!value.IsInitialized());
+
+        value.Set();
+        ASSERT(value.IsInitialized());
+        ASSERT_EQUAL(value.Get(), 0);
+
+        value.Set(10);
+        ASSERT(value.IsInitialized());
+        ASSERT_EQUAL(value.Get(), 10);
+    }
+    {
+        LateInitValue<std::string> value;
+        ASSERT(!value.IsInitialized());
+
+        value.Set();
+        ASSERT(value.IsInitialized());
+        ASSERT_EQUAL(value.Get(), ""s);
+
+        value.Set(20, ' ');
+        ASSERT(value.IsInitialized());
+        ASSERT_EQUAL(value.Get(), std::string(20, ' '));
+
+        std::string str(
+                Generator<std::size_t, 0u, 100u>::Get(),
+                static_cast<char>(Generator<int, 'a', 'z'>::Get()));
+        value.Set(str);
+        ASSERT(value.IsInitialized());
+        ASSERT_EQUAL(value.Get(), str);
+    }
+    {
+        LateInitValue<TestClass<Movable::True, Copyable::True>> value;
+        ASSERT(!value.IsInitialized());
+        value.Set();
+        ASSERT(value.IsInitialized());
+    }
+    {
+        LateInitValue<TestClass<Movable::True, Copyable::False>> value;
+        ASSERT(!value.IsInitialized());
+        value.Set();
+        ASSERT(value.IsInitialized());
+    }
+    {
+        LateInitValue<TestClass<Movable::False, Copyable::True>> value;
+        ASSERT(!value.IsInitialized());
+        value.Set();
+        ASSERT(value.IsInitialized());
+    }
+}
+
+class XBase {
+public:
+    explicit XBase(std::uint8_t value) noexcept: x(value) {}
+    std::uint8_t x;
+};
+
+class XCtorThrowable : public XBase {
+public:
+    explicit XCtorThrowable(std::uint8_t value) : XBase(value) {
+        throw std::runtime_error(""s);
+    }
+};
+
+class XCopyCtorThrowable : public XBase {
+public:
+    explicit XCopyCtorThrowable(std::uint8_t value) noexcept: XBase(value) {}
+    XCopyCtorThrowable(const XCopyCtorThrowable& other) : XBase(other.x) {
+        throw std::runtime_error(""s);
+    }
+    XCopyCtorThrowable& operator=(const XCopyCtorThrowable& rhs) = default;
+    XCopyCtorThrowable(XCopyCtorThrowable&& other) = default;
+    XCopyCtorThrowable& operator=(XCopyCtorThrowable&& rhs) = default;
+    ~XCopyCtorThrowable() = default;
+};
+
+class XMoveCtorThrowable : public XBase {
+public:
+    explicit XMoveCtorThrowable(std::uint8_t value) noexcept: XBase(value) {}
+    XMoveCtorThrowable(const XMoveCtorThrowable& other) = default;
+    XMoveCtorThrowable& operator=(const XMoveCtorThrowable& rhs) = default;
+    XMoveCtorThrowable(XMoveCtorThrowable&& other) : XBase(other.x) {
+        throw std::runtime_error(""s);
+    }
+    XMoveCtorThrowable& operator=(XMoveCtorThrowable&& rhs) = default;
+    ~XMoveCtorThrowable() = default;
+};
+
+void TestSetStrongExceptionGuarantee() {
+    {
+        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
+        std::uint8_t raw[2] = {x, true};
+        auto* value_ptr = reinterpret_cast<LateInitValue<XCtorThrowable>*>(raw);
+        try {
+            value_ptr->Set(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
+        } catch (...) {
+            ASSERT(value_ptr->IsInitialized());
+            ASSERT_EQUAL(value_ptr->Get().x, x);
+        }
+    }
+    {
+        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
+        std::uint8_t raw[2] = {x, true};
+        auto* value_ptr = reinterpret_cast<LateInitValue<XCopyCtorThrowable>*>(raw);
+        try {
+            XCopyCtorThrowable x_object(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
+            value_ptr->Set(x_object);
+        } catch (...) {
+            ASSERT(value_ptr->IsInitialized());
+            ASSERT_EQUAL(value_ptr->Get().x, x);
+        }
+    }
+    {
+        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
+        std::uint8_t raw[2] = {x, true};
+        auto* value_ptr = reinterpret_cast<LateInitValue<XMoveCtorThrowable>*>(raw);
+        try {
+            XMoveCtorThrowable x_object(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
+            value_ptr->Set(std::move(x_object));
+        } catch (...) {
+            ASSERT(value_ptr->IsInitialized());
+            ASSERT_EQUAL(value_ptr->Get().x, x);
+        }
+    }
+}
+
+class DeleteWatcher {
+public:
+    inline static std::uint8_t count = 0;
+    DeleteWatcher() noexcept {
+        count += 1;
+    }
+    ~DeleteWatcher() {
+        count -= 1;
+    }
+};
+
+void TestCorrectMemoryRelease() {
+    {
+        LateInitValue<DeleteWatcher> value;
+        ASSERT_EQUAL(DeleteWatcher::count, 0u);
+        value.Set();
+        ASSERT_EQUAL(DeleteWatcher::count, 1u);
+    }
+    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+}
+
+} // namespace late_init_value_tests
+
+void RunAllTestsLateInitValue() {
+    using namespace late_init_value_tests;
+
+    RUN_TEST(TestSet);
+    RUN_TEST(TestSetStrongExceptionGuarantee);
+    RUN_TEST(TestCorrectMemoryRelease);
+}
+
 } // namespace unit_tests
 
 inline void RunAllTests() {
@@ -377,4 +591,5 @@ inline void RunAllTests() {
     RUN_TEST(TestCorrectnessRelevance);
     RUN_TEST(TestRemoveDuplicates);
     RUN_TEST(TestPaginator);
+    RUN_TEST(RunAllTestsLateInitValue);
 }
