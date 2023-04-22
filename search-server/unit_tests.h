@@ -465,98 +465,66 @@ void TestSet() {
     }
 }
 
-class XBase {
-public:
-    explicit XBase(std::uint8_t value) noexcept: x(value) {}
-    std::uint8_t x;
-};
-
-class XCtorThrowable : public XBase {
-public:
-    explicit XCtorThrowable(std::uint8_t value) : XBase(value) {
-        throw std::runtime_error(""s);
-    }
-};
-
-class XCopyCtorThrowable : public XBase {
-public:
-    explicit XCopyCtorThrowable(std::uint8_t value) noexcept: XBase(value) {}
-    XCopyCtorThrowable(const XCopyCtorThrowable& other) : XBase(other.x) {
-        throw std::runtime_error(""s);
-    }
-    XCopyCtorThrowable& operator=(const XCopyCtorThrowable& rhs) = default;
-    XCopyCtorThrowable(XCopyCtorThrowable&& other) = default;
-    XCopyCtorThrowable& operator=(XCopyCtorThrowable&& rhs) = default;
-    ~XCopyCtorThrowable() = default;
-};
-
-class XMoveCtorThrowable : public XBase {
-public:
-    explicit XMoveCtorThrowable(std::uint8_t value) noexcept: XBase(value) {}
-    XMoveCtorThrowable(const XMoveCtorThrowable& other) = default;
-    XMoveCtorThrowable& operator=(const XMoveCtorThrowable& rhs) = default;
-    XMoveCtorThrowable(XMoveCtorThrowable&& other) : XBase(other.x) {
-        throw std::runtime_error(""s);
-    }
-    XMoveCtorThrowable& operator=(XMoveCtorThrowable&& rhs) = default;
-    ~XMoveCtorThrowable() = default;
-};
-
-void TestSetStrongExceptionGuarantee() {
-    {
-        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
-        std::uint8_t raw[2] = {x, true};
-        auto* value_ptr = reinterpret_cast<LateInitValue<XCtorThrowable>*>(raw);
-        try {
-            value_ptr->Set(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
-        } catch (...) {
-            ASSERT(value_ptr->IsInitialized());
-            ASSERT_EQUAL(value_ptr->Get().x, x);
-        }
-    }
-    {
-        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
-        std::uint8_t raw[2] = {x, true};
-        auto* value_ptr = reinterpret_cast<LateInitValue<XCopyCtorThrowable>*>(raw);
-        try {
-            XCopyCtorThrowable x_object(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
-            value_ptr->Set(x_object);
-        } catch (...) {
-            ASSERT(value_ptr->IsInitialized());
-            ASSERT_EQUAL(value_ptr->Get().x, x);
-        }
-    }
-    {
-        auto x = static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
-        std::uint8_t raw[2] = {x, true};
-        auto* value_ptr = reinterpret_cast<LateInitValue<XMoveCtorThrowable>*>(raw);
-        try {
-            XMoveCtorThrowable x_object(static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get()));
-            value_ptr->Set(std::move(x_object));
-        } catch (...) {
-            ASSERT(value_ptr->IsInitialized());
-            ASSERT_EQUAL(value_ptr->Get().x, x);
-        }
-    }
-}
-
-class DeleteWatcher {
-public:
-    inline static std::uint8_t count = 0;
-    DeleteWatcher() noexcept {
-        count += 1;
-    }
-    ~DeleteWatcher() {
-        count -= 1;
-    }
-};
-
-void TestCorrectMemoryRelease() {
+void TestCorrectMemoryReleaseAfterNoexceptSet() {
     {
         LateInitValue<DeleteWatcher> value;
         ASSERT_EQUAL(DeleteWatcher::count, 0u);
         value.Set();
         ASSERT_EQUAL(DeleteWatcher::count, 1u);
+    }
+    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+}
+
+void TestSetStrongExceptionGuarantee() {
+    auto get_random_uint8_t = [] {
+        return static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
+    };
+    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+    {
+        XBase::should_throw = false;
+        LateInitValue<XCtorThrowable> value;
+        auto x = get_random_uint8_t();
+        value.Set(x);
+        ASSERT_EQUAL(DeleteWatcher::count, 1u);
+        try {
+            XBase::should_throw = true;
+            value.Set(get_random_uint8_t());
+        } catch (...) {
+            ASSERT(value.IsInitialized());
+            ASSERT_EQUAL(value.Get().x, x);
+        }
+    }
+    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+    {
+        XBase::should_throw = false;
+        LateInitValue<XCopyCtorThrowable> value;
+        auto x = get_random_uint8_t();
+        value.Set(x);
+        ASSERT_EQUAL(DeleteWatcher::count, 1u);
+        try {
+            XBase::should_throw = true;
+            XCopyCtorThrowable x_to_copy(get_random_uint8_t());
+            value.Set(x_to_copy);
+        } catch (...) {
+            ASSERT(value.IsInitialized());
+            ASSERT_EQUAL(value.Get().x, x);
+        }
+    }
+    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+    {
+        XBase::should_throw = false;
+        LateInitValue<XMoveCtorThrowable> value;
+        auto x = get_random_uint8_t();
+        value.Set(x);
+        ASSERT_EQUAL(DeleteWatcher::count, 1u);
+        try {
+            XBase::should_throw = true;
+            XMoveCtorThrowable x_to_move(get_random_uint8_t());
+            value.Set(std::move(x_to_move));
+        } catch (...) {
+            ASSERT(value.IsInitialized());
+            ASSERT_EQUAL(value.Get().x, x);
+        }
     }
     ASSERT_EQUAL(DeleteWatcher::count, 0u);
 }
@@ -567,8 +535,8 @@ void RunAllTestsLateInitValue() {
     using namespace late_init_value_tests;
 
     RUN_TEST(TestSet);
+    RUN_TEST(TestCorrectMemoryReleaseAfterNoexceptSet);
     RUN_TEST(TestSetStrongExceptionGuarantee);
-    RUN_TEST(TestCorrectMemoryRelease);
 }
 
 } // namespace unit_tests
