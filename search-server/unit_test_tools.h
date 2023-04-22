@@ -137,6 +137,60 @@ public:
     }
 };
 
+enum class Movable {
+    False = false,
+    True = true,
+};
+
+enum class Copyable {
+    False = false,
+    True = true,
+};
+
+template<Movable, Copyable>
+class TestClass {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = delete;
+    TestClass& operator=(const TestClass&) noexcept = delete;
+    TestClass(TestClass&&) noexcept = delete;
+    TestClass& operator=(TestClass&&) noexcept = delete;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::True, Copyable::True> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = default;
+    TestClass& operator=(const TestClass&) noexcept = default;
+    TestClass(TestClass&&) noexcept = default;
+    TestClass& operator=(TestClass&&) noexcept = default;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::True, Copyable::False> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = delete;
+    TestClass& operator=(const TestClass&) noexcept = delete;
+    TestClass(TestClass&&) noexcept = default;
+    TestClass& operator=(TestClass&&) noexcept = default;
+    ~TestClass() = default;
+};
+
+template<>
+class TestClass<Movable::False, Copyable::True> {
+public:
+    TestClass() noexcept = default;
+    TestClass(const TestClass&) noexcept = default;
+    TestClass& operator=(const TestClass&) noexcept = default;
+    TestClass(TestClass&&) noexcept = delete;
+    TestClass& operator=(TestClass&&) noexcept = delete;
+    ~TestClass() = default;
+};
+
 class DeleteWatcher {
 public:
     inline static std::uint8_t count = 0;
