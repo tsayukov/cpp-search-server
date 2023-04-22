@@ -137,4 +137,53 @@ public:
     }
 };
 
+class DeleteWatcher {
+public:
+    inline static std::uint8_t count = 0;
+    DeleteWatcher() noexcept {
+        count += 1;
+    }
+    ~DeleteWatcher() {
+        count -= 1;
+    }
+};
+
+class XBase : public DeleteWatcher {
+public:
+    inline static bool should_throw = false;
+    explicit XBase(std::uint8_t value) noexcept : DeleteWatcher(), x(value) {}
+    std::uint8_t x;
+};
+
+class XCtorThrowable : public XBase {
+public:
+    explicit XCtorThrowable(std::uint8_t value) : XBase(value) {
+        if (should_throw) throw std::runtime_error(""s);
+    }
+};
+
+class XCopyCtorThrowable : public XBase {
+public:
+    explicit XCopyCtorThrowable(std::uint8_t value) noexcept : XBase(value) {}
+    XCopyCtorThrowable(const XCopyCtorThrowable& other) : XBase(other.x) {
+        if (should_throw) throw std::runtime_error(""s);
+    }
+    XCopyCtorThrowable& operator=(const XCopyCtorThrowable& rhs) = default;
+    XCopyCtorThrowable(XCopyCtorThrowable&& other) = default;
+    XCopyCtorThrowable& operator=(XCopyCtorThrowable&& rhs) = default;
+    ~XCopyCtorThrowable() = default;
+};
+
+class XMoveCtorThrowable : public XBase {
+public:
+    explicit XMoveCtorThrowable(std::uint8_t value) noexcept : XBase(value) {}
+    XMoveCtorThrowable(const XMoveCtorThrowable& other) = default;
+    XMoveCtorThrowable& operator=(const XMoveCtorThrowable& rhs) = default;
+    XMoveCtorThrowable(XMoveCtorThrowable&& other) : XBase(other.x) {
+        if (should_throw) throw std::runtime_error(""s);
+    }
+    XMoveCtorThrowable& operator=(XMoveCtorThrowable&& rhs) = default;
+    ~XMoveCtorThrowable() = default;
+};
+
 } // namespace unit_test_tools
