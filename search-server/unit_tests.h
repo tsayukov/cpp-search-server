@@ -4,7 +4,10 @@
 #include "remove_duplicates.h"
 #include "search_server.h"
 #include "paginator.h"
-#include "late_init_value.h"
+#include "flatten_container.h"
+
+#include <forward_list>
+#include <list>
 
 namespace unit_tests {
 
@@ -357,186 +360,221 @@ inline void TestPaginator() {
     }
 }
 
-namespace late_init_value_tests {
+namespace flatten_container_tests {
 
-enum class Movable {
-    False = false,
-    True = true,
-};
+template<typename T>
+using RAContainer = std::vector<T>;
 
-enum class Copyable {
-    False = false,
-    True = true,
-};
+template<typename T>
+using BContainer = std::list<T>;
 
-template<Movable, Copyable>
-class TestClass {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = delete;
-    TestClass& operator=(const TestClass&) noexcept = delete;
-    TestClass(TestClass&&) noexcept = delete;
-    TestClass& operator=(TestClass&&) noexcept = delete;
-    ~TestClass() = default;
-};
+template<typename T>
+using FContainer = std::forward_list<T>;
 
-template<>
-class TestClass<Movable::True, Copyable::True> {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = default;
-    TestClass& operator=(const TestClass&) noexcept = default;
-    TestClass(TestClass&&) noexcept = default;
-    TestClass& operator=(TestClass&&) noexcept = default;
-    ~TestClass() = default;
-};
+void TestIteratorCategory() {
+    using std::is_same_v;
+    using AnyType = int;
 
-template<>
-class TestClass<Movable::True, Copyable::False> {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = delete;
-    TestClass& operator=(const TestClass&) noexcept = delete;
-    TestClass(TestClass&&) noexcept = default;
-    TestClass& operator=(TestClass&&) noexcept = default;
-    ~TestClass() = default;
-};
+    ASSERT((is_same_v<FlattenContainer<RAContainer<RAContainer<AnyType>>>::iterator::iterator_category,
+                      std::bidirectional_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<BContainer<RAContainer<AnyType>>>::iterator::iterator_category,
+                      std::bidirectional_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<FContainer<RAContainer<AnyType>>>::iterator::iterator_category,
+                      std::forward_iterator_tag>));
 
-template<>
-class TestClass<Movable::False, Copyable::True> {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = default;
-    TestClass& operator=(const TestClass&) noexcept = default;
-    TestClass(TestClass&&) noexcept = delete;
-    TestClass& operator=(TestClass&&) noexcept = delete;
-    ~TestClass() = default;
-};
+    ASSERT((is_same_v<FlattenContainer<RAContainer<BContainer<AnyType>>>::iterator::iterator_category,
+                      std::bidirectional_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<BContainer<BContainer<AnyType>>>::iterator::iterator_category,
+                      std::bidirectional_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<FContainer<BContainer<AnyType>>>::iterator::iterator_category,
+                      std::forward_iterator_tag>));
 
-void TestSet() {
-    {
-        LateInitValue<int> value;
-        ASSERT(!value.IsInitialized());
-
-        value.Set();
-        ASSERT(value.IsInitialized());
-        ASSERT_EQUAL(value.Get(), 0);
-
-        value.Set(10);
-        ASSERT(value.IsInitialized());
-        ASSERT_EQUAL(value.Get(), 10);
-    }
-    {
-        LateInitValue<std::string> value;
-        ASSERT(!value.IsInitialized());
-
-        value.Set();
-        ASSERT(value.IsInitialized());
-        ASSERT_EQUAL(value.Get(), ""s);
-
-        value.Set(20, ' ');
-        ASSERT(value.IsInitialized());
-        ASSERT_EQUAL(value.Get(), std::string(20, ' '));
-
-        std::string str(
-                Generator<std::size_t, 0u, 100u>::Get(),
-                static_cast<char>(Generator<int, 'a', 'z'>::Get()));
-        value.Set(str);
-        ASSERT(value.IsInitialized());
-        ASSERT_EQUAL(value.Get(), str);
-    }
-    {
-        LateInitValue<TestClass<Movable::True, Copyable::True>> value;
-        ASSERT(!value.IsInitialized());
-        value.Set();
-        ASSERT(value.IsInitialized());
-    }
-    {
-        LateInitValue<TestClass<Movable::True, Copyable::False>> value;
-        ASSERT(!value.IsInitialized());
-        value.Set();
-        ASSERT(value.IsInitialized());
-    }
-    {
-        LateInitValue<TestClass<Movable::False, Copyable::True>> value;
-        ASSERT(!value.IsInitialized());
-        value.Set();
-        ASSERT(value.IsInitialized());
-    }
+    ASSERT((is_same_v<FlattenContainer<RAContainer<FContainer<AnyType>>>::iterator::iterator_category,
+                      std::forward_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<BContainer<FContainer<AnyType>>>::iterator::iterator_category,
+                      std::forward_iterator_tag>));
+    ASSERT((is_same_v<FlattenContainer<FContainer<FContainer<AnyType>>>::iterator::iterator_category,
+                      std::forward_iterator_tag>));
 }
 
-void TestCorrectMemoryReleaseAfterNoexceptSet() {
-    {
-        LateInitValue<DeleteWatcher> value;
-        ASSERT_EQUAL(DeleteWatcher::count, 0u);
-        value.Set();
-        ASSERT_EQUAL(DeleteWatcher::count, 1u);
-    }
-    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+std::vector<std::size_t> GenerateBottomSizes(std::size_t top_size,
+                                             std::size_t min_bottom_size, std::size_t max_bottom_size) {
+    std::vector<std::size_t> bottom_sizes(top_size);
+    std::generate(
+            bottom_sizes.begin(), bottom_sizes.end(),
+            [min_bottom_size, max_bottom_size] {
+                return Generator<std::size_t>::Get(min_bottom_size, max_bottom_size);
+            });
+    return bottom_sizes;
 }
 
-void TestSetStrongExceptionGuarantee() {
-    auto get_random_uint8_t = [] {
-        return static_cast<std::uint8_t>(Generator<std::uint16_t, 0u, 255u>::Get());
-    };
-    ASSERT_EQUAL(DeleteWatcher::count, 0u);
-    {
-        XBase::should_throw = false;
-        LateInitValue<XCtorThrowable> value;
-        auto x = get_random_uint8_t();
-        value.Set(x);
-        ASSERT_EQUAL(DeleteWatcher::count, 1u);
-        try {
-            XBase::should_throw = true;
-            value.Set(get_random_uint8_t());
-        } catch (...) {
-            ASSERT(value.IsInitialized());
-            ASSERT_EQUAL(value.Get().x, x);
-        }
+template<typename T>
+std::vector<T> GenerateAnswer(const std::vector<std::size_t>& bottom_sizes) {
+    std::vector<T> answer;
+    const std::size_t answer_size = std::accumulate(bottom_sizes.cbegin(), bottom_sizes.cend(), std::size_t(0));
+    answer.reserve(answer_size);
+    for (std::size_t i = 0; i < answer_size; ++i) {
+        answer.push_back(Generator<T>::Get());
     }
-    ASSERT_EQUAL(DeleteWatcher::count, 0u);
-    {
-        XBase::should_throw = false;
-        LateInitValue<XCopyCtorThrowable> value;
-        auto x = get_random_uint8_t();
-        value.Set(x);
-        ASSERT_EQUAL(DeleteWatcher::count, 1u);
-        try {
-            XBase::should_throw = true;
-            XCopyCtorThrowable x_to_copy(get_random_uint8_t());
-            value.Set(x_to_copy);
-        } catch (...) {
-            ASSERT(value.IsInitialized());
-            ASSERT_EQUAL(value.Get().x, x);
-        }
-    }
-    ASSERT_EQUAL(DeleteWatcher::count, 0u);
-    {
-        XBase::should_throw = false;
-        LateInitValue<XMoveCtorThrowable> value;
-        auto x = get_random_uint8_t();
-        value.Set(x);
-        ASSERT_EQUAL(DeleteWatcher::count, 1u);
-        try {
-            XBase::should_throw = true;
-            XMoveCtorThrowable x_to_move(get_random_uint8_t());
-            value.Set(std::move(x_to_move));
-        } catch (...) {
-            ASSERT(value.IsInitialized());
-            ASSERT_EQUAL(value.Get().x, x);
-        }
-    }
-    ASSERT_EQUAL(DeleteWatcher::count, 0u);
+    return answer;
 }
 
-} // namespace late_init_value_tests
+template<typename TopContainer, typename ValueType = typename TopContainer::value_type::value_type>
+TopContainer GetTopContainer(const std::vector<ValueType>& answer,
+                             const std::vector<std::size_t>& bottom_sizes) {
+    using BottomContainer = typename TopContainer::value_type;
 
-void RunAllTestsLateInitValue() {
-    using namespace late_init_value_tests;
+    TopContainer top_container(bottom_sizes.size(), BottomContainer{});
+    auto top_iter = top_container.begin();
+    for (std::size_t i = 0, j = 0; i < bottom_sizes.size(); ++i, ++top_iter) {
+        *top_iter = BottomContainer(bottom_sizes[i], ValueType{});
+        std::size_t bottom_size = bottom_sizes[i];
+        for (auto bottom_iter = top_iter->begin(); bottom_size != 0; ++bottom_iter, --bottom_size, ++j) {
+            *bottom_iter = answer[j];
+        }
+    }
+    return top_container;
+}
 
-    RUN_TEST(TestSet);
-    RUN_TEST(TestCorrectMemoryReleaseAfterNoexceptSet);
-    RUN_TEST(TestSetStrongExceptionGuarantee);
+template<typename TopContainer, typename ValueType = typename TopContainer::value_type::value_type>
+std::vector<ValueType> GetResultByRangeBasedForLoop(TopContainer& top_container, std::size_t answer_size) {
+    std::vector<ValueType> result;
+    result.reserve(answer_size);
+    const auto flatten_container = MakeFlattenContainer(std::move(top_container));
+    for (const auto& element : flatten_container) {
+        result.push_back(element);
+    }
+    return result;
+}
+
+template<typename TopContainer>
+void TestRangeBasedFor(std::size_t top_size,
+                       std::size_t min_bottom_size, std::size_t max_bottom_size) {
+    using ValueType = typename TopContainer::value_type::value_type;
+
+    auto bottom_sizes = GenerateBottomSizes(top_size, min_bottom_size, max_bottom_size);
+    auto answer = GenerateAnswer<ValueType>(bottom_sizes);
+    auto top_container = GetTopContainer<TopContainer>(answer, bottom_sizes);
+    auto result = GetResultByRangeBasedForLoop(top_container, answer.size());
+    ASSERT_EQUAL(result, answer);
+}
+
+template<typename T, std::size_t TopSize, std::size_t MinBottomSize, std::size_t MaxBottomSize>
+void AllTestsRangeBasedFor() {
+    TestRangeBasedFor<RAContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<BContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<FContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+
+    TestRangeBasedFor<RAContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<BContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<FContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+
+    TestRangeBasedFor<RAContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<BContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestRangeBasedFor<FContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+}
+
+template<typename TopContainer, typename ValueType = typename TopContainer::value_type::value_type>
+std::vector<ValueType> GetResultByReverseOrder(TopContainer& top_container, std::size_t answer_size) {
+    std::vector<ValueType> result;
+    result.reserve(answer_size);
+    const auto flatten_container = MakeFlattenContainer(std::move(top_container));
+    auto begin = flatten_container.cbegin();
+    auto end = flatten_container.cend();
+    if (begin != end) {
+        do {
+            --end;
+            result.push_back(*end);
+        } while (begin != end);
+    }
+    return result;
+}
+
+template<typename TopContainer>
+void TestReverseOrder(std::size_t top_size,
+                      std::size_t min_bottom_size, std::size_t max_bottom_size) {
+    using ValueType = typename TopContainer::value_type::value_type;
+
+    auto bottom_sizes = GenerateBottomSizes(top_size, min_bottom_size, max_bottom_size);
+    auto answer = GenerateAnswer<ValueType>(bottom_sizes);
+    auto top_container = GetTopContainer<TopContainer>(answer, bottom_sizes);
+    auto result = GetResultByReverseOrder(top_container, answer.size());
+    std::reverse(answer.begin(), answer.end());
+    ASSERT_EQUAL(result, answer);
+}
+
+template<typename T, std::size_t TopSize, std::size_t MinBottomSize, std::size_t MaxBottomSize>
+void AllTestsReverseOrder() {
+    TestReverseOrder<RAContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestReverseOrder<BContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+
+    TestReverseOrder<RAContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestReverseOrder<BContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+}
+
+template<typename TopContainer, typename ValueType = typename TopContainer::value_type::value_type>
+std::vector<ValueType> GetResultByMutateValue(TopContainer& top_container, std::size_t answer_size) {
+    std::vector<ValueType> result;
+    result.reserve(answer_size);
+    auto flatten_container = MakeFlattenContainer(std::move(top_container));
+    for (auto& elem : flatten_container) {
+        elem = ValueType{};
+    }
+    for (const auto& element : flatten_container) {
+        result.push_back(element);
+    }
+    return result;
+}
+
+template<typename TopContainer>
+void TestMutateValue(std::size_t top_size,
+                       std::size_t min_bottom_size, std::size_t max_bottom_size) {
+    using ValueType = typename TopContainer::value_type::value_type;
+
+    auto bottom_sizes = GenerateBottomSizes(top_size, min_bottom_size, max_bottom_size);
+    auto answer = GenerateAnswer<ValueType>(bottom_sizes);
+    auto top_container = GetTopContainer<TopContainer>(answer, bottom_sizes);
+    auto result = GetResultByMutateValue(top_container, answer.size());
+    std::for_each(answer.begin(), answer.end(), [](auto& element) { return element = ValueType{}; });
+    ASSERT_EQUAL(result, answer);
+}
+
+template<typename T, std::size_t TopSize, std::size_t MinBottomSize, std::size_t MaxBottomSize>
+void AllTestsMutateValue() {
+    TestMutateValue<RAContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<BContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<FContainer<RAContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+
+    TestMutateValue<RAContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<BContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<FContainer<BContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+
+    TestMutateValue<RAContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<BContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+    TestMutateValue<FContainer<FContainer<T>>>(TopSize, MinBottomSize, MaxBottomSize);
+}
+
+} // namespace flatten_container_tests
+
+void RunAllTestsFlattenContainer() {
+    using namespace flatten_container_tests;
+
+    RUN_TEST(TestIteratorCategory);
+
+    RUN_TEST((AllTestsRangeBasedFor<int, 0, 0, 0>));
+    RUN_TEST((AllTestsRangeBasedFor<int, 10, 0, 0>));
+    RUN_TEST((AllTestsRangeBasedFor<int, 10, 0, 1>));
+    RUN_TEST((AllTestsRangeBasedFor<int, 10, 2, 3>));
+
+    RUN_TEST((AllTestsReverseOrder<int, 0, 0, 0>));
+    RUN_TEST((AllTestsReverseOrder<int, 10, 0, 0>));
+    RUN_TEST((AllTestsReverseOrder<int, 10, 0, 1>));
+    RUN_TEST((AllTestsReverseOrder<int, 10, 2, 3>));
+
+    RUN_TEST((AllTestsMutateValue<int, 0, 0, 0>));
+    RUN_TEST((AllTestsMutateValue<int, 10, 0, 0>));
+    RUN_TEST((AllTestsMutateValue<int, 10, 0, 1>));
+    RUN_TEST((AllTestsMutateValue<int, 10, 2, 3>));
 }
 
 } // namespace unit_tests
@@ -559,5 +597,5 @@ inline void RunAllTests() {
     RUN_TEST(TestCorrectnessRelevance);
     RUN_TEST(TestRemoveDuplicates);
     RUN_TEST(TestPaginator);
-    RUN_TEST(RunAllTestsLateInitValue);
+    RUN_TEST(RunAllTestsFlattenContainer);
 }
