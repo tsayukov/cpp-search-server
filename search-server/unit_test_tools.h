@@ -127,117 +127,20 @@ protected:
     inline static auto generator_ = std::mt19937(random_device_());
 };
 
-template<typename T, T MIN = std::numeric_limits<T>::min(), T MAX = std::numeric_limits<T>::max()>
+template<typename T>
 class Generator : public BaseGenerator {
-private:
-    inline static auto distribution_ = std::uniform_int_distribution<T>(MIN, MAX);
 public:
-    static T Get() {
-        return distribution_(generator_);
+    static T Get(T min = std::numeric_limits<T>::min(), T max = std::numeric_limits<T>::max()) {
+        return std::uniform_int_distribution<T>(min, max)(generator_);
     }
-};
-
-enum class Movable {
-    False = false,
-    True = true,
-};
-
-enum class Copyable {
-    False = false,
-    True = true,
-};
-
-template<Movable, Copyable>
-class TestClass {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = delete;
-    TestClass& operator=(const TestClass&) noexcept = delete;
-    TestClass(TestClass&&) noexcept = delete;
-    TestClass& operator=(TestClass&&) noexcept = delete;
-    ~TestClass() = default;
 };
 
 template<>
-class TestClass<Movable::True, Copyable::True> {
+class Generator<char> : public BaseGenerator {
 public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = default;
-    TestClass& operator=(const TestClass&) noexcept = default;
-    TestClass(TestClass&&) noexcept = default;
-    TestClass& operator=(TestClass&&) noexcept = default;
-    ~TestClass() = default;
-};
-
-template<>
-class TestClass<Movable::True, Copyable::False> {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = delete;
-    TestClass& operator=(const TestClass&) noexcept = delete;
-    TestClass(TestClass&&) noexcept = default;
-    TestClass& operator=(TestClass&&) noexcept = default;
-    ~TestClass() = default;
-};
-
-template<>
-class TestClass<Movable::False, Copyable::True> {
-public:
-    TestClass() noexcept = default;
-    TestClass(const TestClass&) noexcept = default;
-    TestClass& operator=(const TestClass&) noexcept = default;
-    TestClass(TestClass&&) noexcept = delete;
-    TestClass& operator=(TestClass&&) noexcept = delete;
-    ~TestClass() = default;
-};
-
-class DeleteWatcher {
-public:
-    inline static std::uint8_t count = 0;
-    DeleteWatcher() noexcept {
-        count += 1;
+    static char Get(char min = 'a', char max = 'z') {
+        return static_cast<char>(std::uniform_int_distribution<int>(min, max)(generator_));
     }
-    ~DeleteWatcher() {
-        count -= 1;
-    }
-};
-
-class XBase : public DeleteWatcher {
-public:
-    inline static bool should_throw = false;
-    explicit XBase(std::uint8_t value) noexcept : DeleteWatcher(), x(value) {}
-    std::uint8_t x;
-};
-
-class XCtorThrowable : public XBase {
-public:
-    explicit XCtorThrowable(std::uint8_t value) : XBase(value) {
-        if (should_throw) throw std::runtime_error(""s);
-    }
-};
-
-class XCopyCtorThrowable : public XBase {
-public:
-    explicit XCopyCtorThrowable(std::uint8_t value) noexcept : XBase(value) {}
-    XCopyCtorThrowable(const XCopyCtorThrowable& other) : XBase(other.x) {
-        if (should_throw) throw std::runtime_error(""s);
-    }
-    XCopyCtorThrowable& operator=(const XCopyCtorThrowable& rhs) = default;
-    XCopyCtorThrowable(XCopyCtorThrowable&& other) = default;
-    XCopyCtorThrowable& operator=(XCopyCtorThrowable&& rhs) = default;
-    ~XCopyCtorThrowable() = default;
-};
-
-class XMoveCtorThrowable : public XBase {
-public:
-    explicit XMoveCtorThrowable(std::uint8_t value) noexcept : XBase(value) {}
-    XMoveCtorThrowable(const XMoveCtorThrowable& other) = default;
-    XMoveCtorThrowable& operator=(const XMoveCtorThrowable& rhs) = default;
-    XMoveCtorThrowable(XMoveCtorThrowable&& other) : XBase(other.x) {
-        if (should_throw) throw std::runtime_error(""s);
-    }
-    XMoveCtorThrowable& operator=(XMoveCtorThrowable&& rhs) = default;
-    ~XMoveCtorThrowable() = default;
 };
 
 } // namespace unit_test_tools
