@@ -63,6 +63,32 @@ public:
         using TopIterCategory = typename std::iterator_traits<TopIter>::iterator_category;
         using BottomIterCategory = typename std::iterator_traits<BottomIter>::iterator_category;
 
+        void ForwardToFirstNonemptyBottomContainer()
+        noexcept(noexcept(std::declval<TopIter>() != std::declval<TopIter>())
+              && noexcept(IsBottomEmpty())
+              && noexcept(std::is_nothrow_copy_constructible_v<BottomIter>)
+              && noexcept(++current_top_iter_)) {
+            while (current_top_iter_ != end_top_iter_) {
+                if (!IsBottomEmpty()) {
+                    current_bottom_iter_ = BottomBegin();
+                    break;
+                }
+                ++current_top_iter_;
+            }
+        }
+
+        void BackwardToFirstNonemptyBottomContainer()
+        noexcept(noexcept(IsBottomEmpty())
+              && noexcept(std::is_nothrow_copy_constructible_v<BottomIter>)
+              && noexcept(--current_top_iter_)
+              && noexcept(--current_bottom_iter_)) {
+            do {
+                --current_top_iter_;
+            } while (IsBottomEmpty());
+            current_bottom_iter_ = BottomEnd();
+            --current_bottom_iter_;
+        }
+
         explicit Iterator(TopIter current_top_iter, TopIter end_top_iter)
                 noexcept(std::is_nothrow_move_constructible_v<TopIter>
                       && noexcept(ForwardToFirstNonemptyBottomContainer()))
@@ -165,32 +191,6 @@ public:
 
         bool IsBottomEmpty() const noexcept(noexcept(BottomBegin() == BottomEnd())) {
             return BottomBegin() == BottomEnd();
-        }
-
-        void ForwardToFirstNonemptyBottomContainer()
-                noexcept(noexcept(std::declval<TopIter>() != std::declval<TopIter>())
-                      && noexcept(IsBottomEmpty())
-                      && noexcept(std::is_nothrow_copy_constructible_v<BottomIter>)
-                      && noexcept(++current_top_iter_)) {
-            while (current_top_iter_ != end_top_iter_) {
-                if (!IsBottomEmpty()) {
-                    current_bottom_iter_ = BottomBegin();
-                    break;
-                }
-                ++current_top_iter_;
-            }
-        }
-
-        void BackwardToFirstNonemptyBottomContainer()
-                noexcept(noexcept(IsBottomEmpty())
-                      && noexcept(std::is_nothrow_copy_constructible_v<BottomIter>)
-                      && noexcept(--current_top_iter_)
-                      && noexcept(--current_bottom_iter_)) {
-            do {
-                --current_top_iter_;
-            } while (IsBottomEmpty());
-            current_bottom_iter_ = BottomEnd();
-            --current_bottom_iter_;
         }
     };
 
