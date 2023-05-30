@@ -76,6 +76,12 @@ public:
     [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
     MatchDocument(const std::string& raw_query, int document_id) const;
 
+    [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
+    MatchDocument(const std::execution::sequenced_policy&, const std::string& raw_query, int document_id) const;
+
+    [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
+    MatchDocument(const std::execution::parallel_policy&, const std::string& raw_query, int document_id) const;
+
 private:
     std::set<std::string, std::less<>> stop_words_;
     std::set<int> document_ids_;
@@ -98,7 +104,7 @@ private:
 
     [[nodiscard]] static int ComputeAverageRating(const std::vector<int>& ratings);
 
-    [[nodiscard]] double ComputeInverseDocumentFrequency(std::size_t number_of_docs_with_the_word) const;
+    [[nodiscard]] double ComputeInverseDocumentFrequency(std::size_t docs_with_the_word) const;
 
     // Parsing
 
@@ -111,13 +117,15 @@ private:
     };
 
     struct Query {
-        std::set<std::string_view> plus_words;
-        std::set<std::string_view> minus_words;
+        std::vector<std::string_view> plus_words;
+        std::vector<std::string_view> minus_words;
     };
 
     [[nodiscard]] QueryWord ParseQueryWord(std::string_view word) const;
 
-    [[nodiscard]] Query ParseQuery(std::string_view text) const;
+    [[nodiscard]] Query NonUniqueParseQuery(std::string_view text) const;
+
+    [[nodiscard]] Query UniqueParseQuery(std::string_view text) const;
 
     // Search
 
@@ -147,7 +155,7 @@ template<typename Predicate>
     static constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
     static constexpr double ERROR_MARGIN = 1e-6;
 
-    auto result = FindAllDocuments(ParseQuery(raw_query), predicate);
+    auto result = FindAllDocuments(UniqueParseQuery(raw_query), predicate);
 
     std::sort(result.begin(), result.end(),
               [](const Document& lhs, const Document& rhs) {
