@@ -130,8 +130,7 @@ inline void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server("in the"s);
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         auto found_docs = server.FindTopDocuments("in"s);
-        ASSERT_HINT(found_docs.empty(),
-                    "Stop words must be excluded from documents"s);
+        ASSERT_HINT(found_docs.empty(), "Stop words must be excluded from documents"s);
     }
 }
 
@@ -146,8 +145,7 @@ inline void TestExcludeDocumentsWithMinusWords() {
         ASSERT_HINT(found_docs.empty(), "Relevant documents with minus words must be excluded from the result"s);
 
         found_docs = server.FindTopDocuments("cat -dog"s);
-        ASSERT_EQUAL_HINT(found_docs.size(), 1u,
-                          "Relevant documents without minus words must be found"s);
+        ASSERT_EQUAL_HINT(found_docs.size(), 1u, "Relevant documents without minus words must be found"s);
     }
     {
         ASSERT_THROW((void) server.FindTopDocuments("cat -"s), std::invalid_argument);
@@ -168,13 +166,13 @@ inline void TestMatchingDocuments() {
     {
         auto [match_words, _] = server.MatchDocument("beautiful cats city"s, doc_id);
         ASSERT_EQUAL_HINT(match_words.size(), 2u,
-                          "Matching words between a content of the document and the query without repetitions: "s
-                                  "checks size of matched words"s);
+                          "Matching words between a content of the document and the query without repetitions: "
+                          "checks size of matched words"s);
         sort(match_words.begin(), match_words.end());
         const std::vector<std::string> answer = { "cats"s, "city"s };
         ASSERT_EQUAL_HINT(match_words, answer,
-                          "Matching words between a content of the document and the query without repetitions: "s
-                                  "checks matched words"s);
+                          "Matching words between a content of the document and the query without repetitions: "
+                          "checks matched words"s);
     }
     {
         const auto [match_words, _] = server.MatchDocument("cats -city"s, doc_id);
