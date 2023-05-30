@@ -59,6 +59,9 @@ public:
 
     void RemoveDocument(int document_id);
 
+    template<typename ExecutionPolicy>
+    void RemoveDocument(const ExecutionPolicy& policy, int document_id);
+
     // Search
 
     template<typename Predicate>
@@ -131,6 +134,37 @@ SearchServer::SearchServer(const StringContainer& stop_words)
                         [](const auto& word) {
                             return !word.empty() && (StringHasNotAnyForbiddenChars(word), true);
                         })) {
+}
+
+// Modification
+
+template<typename ExecutionPolicy>
+void SearchServer::RemoveDocument(const ExecutionPolicy& policy, int document_id) {
+    auto document_iter = documents_.find(document_id);
+    if (document_iter == documents_.end()) {
+        return;
+    }
+
+    const auto& document_data = document_iter->second;
+
+    std::vector<std::string_view> word_views(document_data.word_frequencies.size());
+    std::transform(
+            document_data.word_frequencies.cbegin(), document_data.word_frequencies.cend(),
+            word_views.begin(),
+            [](const auto& key_value) {
+                return key_value.first;
+            });
+
+    std::for_each(
+            policy,
+            word_views.cbegin(), word_views.cend(),
+            [this, document_id](const auto word_view) {
+                auto& documents_with_that_word = word_to_document_frequencies_.find(word_view)->second;
+                documents_with_that_word.erase(document_id);
+            });
+
+    documents_.erase(document_iter);
+    document_ids_.erase(document_id);
 }
 
 // Search

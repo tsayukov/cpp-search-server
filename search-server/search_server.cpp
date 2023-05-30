@@ -2,6 +2,7 @@
 
 #include <numeric>
 #include <stdexcept>
+#include <execution>
 
 using namespace std::string_literals;
 
@@ -67,21 +68,7 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
 }
 
 void SearchServer::RemoveDocument(int document_id) {
-    if (auto doc_iter = documents_.find(document_id); doc_iter != documents_.end()) {
-        const auto& document_data = doc_iter->second;
-        for (const auto& [word, _] : document_data.word_frequencies) {
-            auto word_iter = word_to_document_frequencies_.find(word);
-            auto& documents_with_that_word = word_iter->second;
-            documents_with_that_word.erase(document_id);
-
-            if (documents_with_that_word.empty()) {
-                word_to_document_frequencies_.erase(word_iter);
-            }
-        }
-
-        documents_.erase(doc_iter);
-        document_ids_.erase(document_id);
-    }
+    RemoveDocument(std::execution::seq, document_id);
 }
 
 // Search
