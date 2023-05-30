@@ -134,30 +134,27 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
 [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
 SearchServer::MatchDocument(const std::string& raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
+    CheckDocumentIdExists(document_id);
 
     const auto query = ParseQuery(raw_query);
+    const auto& document_data = documents_.at(document_id);
+    const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
     std::vector<std::string> matched_words;
-    for (const auto& word : query.plus_words) {
-        auto iter = word_to_document_frequencies_.find(word);
-        if (iter == word_to_document_frequencies_.end()) {
-            continue;
+    for (const auto& word : query.minus_words) {
+        auto iter = word_frequencies_in_that_documents.find(word);
+        if (iter != word_frequencies_in_that_documents.end()) {
+            return make_tuple(std::move(matched_words), document_data.status);
         }
-        if (const auto& document_frequencies = iter->second; document_frequencies.count(document_id) > 0) {
+    }
+    for (const auto& word : query.plus_words) {
+        auto iter = word_frequencies_in_that_documents.find(word);
+        if (iter != word_frequencies_in_that_documents.end()) {
             matched_words.emplace_back(word);
         }
     }
-    for (const auto& word : query.minus_words) {
-        auto iter = word_to_document_frequencies_.find(word);
-        if (iter == word_to_document_frequencies_.end()) {
-            continue;
-        }
-        if (const auto& document_frequencies = iter->second; document_frequencies.count(document_id) > 0) {
-            matched_words.clear();
-            break;
-        }
-    }
-    return make_tuple(std::move(matched_words), documents_.at(document_id).status);
+
+    return make_tuple(std::move(matched_words), document_data.status);
 }
 
 // Checks
@@ -180,6 +177,12 @@ void SearchServer::CheckDocumentIdIsNotNegative(int document_id) {
 void SearchServer::CheckDocumentIdDoesntExist(int document_id) const {
     if (documents_.count(document_id) > 0) {
         throw std::invalid_argument("The passed document id already exists"s);
+    }
+}
+
+void SearchServer::CheckDocumentIdExists(int document_id) const {
+    if (documents_.count(document_id) == 0) {
+        throw std::invalid_argument("The passed document id doesn't exist"s);
     }
 }
 

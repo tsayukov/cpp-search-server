@@ -90,6 +90,8 @@ private:
 
     void CheckDocumentIdDoesntExist(int document_id) const;
 
+    void CheckDocumentIdExists(int document_id) const;
+
     [[nodiscard]] bool IsStopWord(std::string_view word) const;
 
     // Metric computation
