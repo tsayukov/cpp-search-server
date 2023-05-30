@@ -143,4 +143,13 @@ public:
     }
 };
 
+template<>
+class Generator<double> : public BaseGenerator {
+public:
+    static double Get(double min = std::numeric_limits<double>::min(),
+                      double max = std::numeric_limits<double>::max()) {
+        return std::uniform_real_distribution<double>(min, max)(generator_);
+    }
+};
+
 } // namespace unit_test_tools
