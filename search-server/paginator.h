@@ -2,10 +2,10 @@
 
 #include "borrowed_range.h"
 
-#include <cstddef>
 #include <iterator>
 #include <ostream>
 #include <type_traits>
+#include <cstddef>
 
 template<typename InputIterator>
 class Page {
