@@ -1,6 +1,5 @@
 #pragma once
 
-#include "filter.h"
 #include "document.h"
 #include "string_processing.h"
 
@@ -35,10 +34,19 @@ private:
 public:
     // Constructors
 
-    template<typename StringContainer>
-    explicit SearchServer(const StringContainer& stop_words);
+    template<typename StringContainer,
+             std::enable_if_t<
+                    std::is_same_v<typename std::remove_reference_t<StringContainer>::value_type, std::string>,
+                    bool> = true>
+    explicit SearchServer(StringContainer&& stop_words);
 
-    explicit SearchServer(const std::string& stop_words);
+    template<typename StringViewContainer,
+             std::enable_if_t<
+                    std::is_same_v<typename std::remove_reference_t<StringViewContainer>::value_type, std::string_view>,
+                    bool> = true>
+    explicit SearchServer(StringViewContainer&& stop_words);
+
+    explicit SearchServer(std::string_view stop_words);
 
     // Capacity and Lookup
 
@@ -54,7 +62,7 @@ public:
 
     // Modification
 
-    void AddDocument(int document_id, const std::string& document, DocumentStatus status,
+    void AddDocument(int document_id, std::string_view document, DocumentStatus status,
                      const std::vector<int>& ratings);
 
     void RemoveDocument(int document_id);
@@ -66,21 +74,21 @@ public:
     // Search
 
     template<typename Predicate>
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::string& raw_query, Predicate predicate) const;
+    [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query, Predicate predicate) const;
 
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::string& raw_query,
+    [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query,
                                                          DocumentStatus document_status) const;
 
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::string& raw_query) const;
+    [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query) const;
 
-    [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
-    MatchDocument(const std::string& raw_query, int document_id) const;
+    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
+    MatchDocument(std::string_view raw_query, int document_id) const;
 
-    [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
-    MatchDocument(const std::execution::sequenced_policy&, const std::string& raw_query, int document_id) const;
+    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
+    MatchDocument(const std::execution::sequenced_policy&, std::string_view raw_query, int document_id) const;
 
-    [[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
-    MatchDocument(const std::execution::parallel_policy&, const std::string& raw_query, int document_id) const;
+    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
+    MatchDocument(const std::execution::parallel_policy&, std::string_view raw_query, int document_id) const;
 
 private:
     std::set<std::string, std::less<>> stop_words_;
@@ -135,22 +143,36 @@ private:
 
 // Search Server template implementation
 
-// Constructor
+// Constructors
 
-template<typename StringContainer>
-SearchServer::SearchServer(const StringContainer& stop_words)
-        : stop_words_(
-                Filter<std::set<std::string, std::less<>>>(
-                        stop_words,
-                        [](const auto& word) {
-                            return !word.empty() && (StringHasNotAnyForbiddenChars(word), true);
-                        })) {
+template<typename StringContainer,
+         std::enable_if_t<
+                 std::is_same_v<typename std::remove_reference_t<StringContainer>::value_type, std::string>,
+                 bool>>
+SearchServer::SearchServer(StringContainer&& stop_words) {
+    for (auto& stop_word : stop_words) {
+        if (!stop_word.empty() && (StringHasNotAnyForbiddenChars(stop_word), true)) {
+            stop_words_.insert(std::move(stop_word));
+        }
+    }
+}
+
+template<typename StringViewContainer,
+         std::enable_if_t<
+                 std::is_same_v<typename std::remove_reference_t<StringViewContainer>::value_type, std::string_view>,
+                 bool>>
+SearchServer::SearchServer(StringViewContainer&& stop_words) {
+    for (auto stop_word : stop_words) {
+        if (!stop_word.empty() && (StringHasNotAnyForbiddenChars(stop_word), true)) {
+            stop_words_.insert(std::string(stop_word));
+        }
+    }
 }
 
 // Search
 
 template<typename Predicate>
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
                                                                    Predicate predicate) const {
     static constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
     static constexpr double ERROR_MARGIN = 1e-6;
@@ -204,6 +226,7 @@ template<typename Predicate>
     }
 
     std::vector<Document> result;
+    result.reserve(doc_to_relevance.size());
     for (const auto [document_id, relevance] : doc_to_relevance) {
         result.emplace_back(document_id, relevance, documents_.at(document_id).rating);
     }

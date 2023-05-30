@@ -6,9 +6,9 @@
 
 using namespace std::string_literals;
 
-// Constructor
+// Constructors
 
-SearchServer::SearchServer(const std::string& stop_words)
+SearchServer::SearchServer(std::string_view stop_words)
         : SearchServer(SplitIntoWords(stop_words)) {
 }
 
@@ -39,7 +39,7 @@ SearchServer::SearchServer(const std::string& stop_words)
 
 // Modification
 
-void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status,
+void SearchServer::AddDocument(int document_id, std::string_view document, DocumentStatus status,
                                const std::vector<int>& ratings) {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdDoesntExist(document_id);
@@ -119,7 +119,7 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
 
 // Search
 
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query,
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
                                                                    DocumentStatus document_status) const {
     return FindTopDocuments(raw_query,
                             [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
@@ -127,12 +127,12 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
                             });
 }
 
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_query) const {
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
     return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
 }
 
-[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
-SearchServer::MatchDocument(const std::string& raw_query, int document_id) const {
+[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
+SearchServer::MatchDocument(std::string_view raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
@@ -140,62 +140,61 @@ SearchServer::MatchDocument(const std::string& raw_query, int document_id) const
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
-    std::vector<std::string> matched_words;
-    for (const auto& word : query.minus_words) {
-        auto iter = word_frequencies_in_that_documents.find(word);
+    std::vector<std::string_view> matched_words;
+    for (const auto minus_word_view : query.minus_words) {
+        auto iter = word_frequencies_in_that_documents.find(minus_word_view);
         if (iter != word_frequencies_in_that_documents.end()) {
             return make_tuple(std::move(matched_words), document_data.status);
         }
     }
-    for (const auto& word : query.plus_words) {
-        auto iter = word_frequencies_in_that_documents.find(word);
+    for (const auto plus_word_view : query.plus_words) {
+        auto iter = word_frequencies_in_that_documents.find(plus_word_view);
         if (iter != word_frequencies_in_that_documents.end()) {
-            matched_words.emplace_back(word);
+            matched_words.emplace_back(plus_word_view);
         }
     }
 
     return make_tuple(std::move(matched_words), document_data.status);
 }
 
-[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
+[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
 SearchServer::MatchDocument(const std::execution::sequenced_policy&,
-                            const std::string& raw_query, int document_id) const {
+                            std::string_view raw_query, int document_id) const {
     return MatchDocument(raw_query, document_id);
 }
 
-[[nodiscard]] std::tuple<std::vector<std::string>, DocumentStatus>
+[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
 SearchServer::MatchDocument(const std::execution::parallel_policy&,
-                            const std::string& raw_query, int document_id) const {
+                            std::string_view raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
-    auto query = NonUniqueParseQuery(raw_query);
+    const auto query = NonUniqueParseQuery(raw_query);
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
-    std::vector<std::string> matched_words;
+    std::vector<std::string_view> matched_words;
+    auto is_that_document_has_word = [&word_frequencies_in_that_documents](const auto word_view) {
+        return word_frequencies_in_that_documents.count(word_view) > 0;
+    };
 
     const bool that_document_has_minus_word = std::any_of(
             std::execution::par,
             query.minus_words.begin(), query.minus_words.end(),
-            [&word_frequencies_in_that_documents](const auto minus_word_view) {
-                return word_frequencies_in_that_documents.count(minus_word_view) > 0;
-            });
+            is_that_document_has_word);
     if (that_document_has_minus_word) {
         return make_tuple(std::move(matched_words), document_data.status);
     }
 
     matched_words.resize(query.plus_words.size());
     auto begin_of_matched_words_to_remove = std::copy_if(
-            std::execution::par,
             query.plus_words.begin(), query.plus_words.end(),
             matched_words.begin(),
-            [&word_frequencies_in_that_documents](const auto plus_word_view) {
-                return word_frequencies_in_that_documents.count(plus_word_view) > 0;
-            });
+            is_that_document_has_word);
+
     matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
     std::sort(std::execution::par, matched_words.begin(), matched_words.end());
-    begin_of_matched_words_to_remove = std::unique(std::execution::par, matched_words.begin(), matched_words.end());
+    begin_of_matched_words_to_remove = std::unique(matched_words.begin(), matched_words.end());
     matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
 
     return make_tuple(std::move(matched_words), document_data.status);
