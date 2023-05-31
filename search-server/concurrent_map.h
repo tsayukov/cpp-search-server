@@ -32,8 +32,14 @@ public:
     }
 
     Access operator[](const Key& key) {
-        auto& bucket = buckets_[static_cast<std::size_t>(key) % buckets_.size()];
+        auto& bucket = GetBucket(key);
         return {key, bucket};
+    }
+
+    void erase(const Key& key) {
+        auto& bucket = GetBucket(key);
+        std::lock_guard guard(bucket.mutex);
+        (void) bucket.map.erase(key);
     }
 
     Map BuildOrdinaryMap() {
@@ -47,4 +53,8 @@ public:
 
 private:
     std::vector<Bucket> buckets_;
+
+    Bucket& GetBucket(const Key& key) {
+        return buckets_[static_cast<std::size_t>(key) % buckets_.size()];
+    }
 };
