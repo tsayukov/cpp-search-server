@@ -116,6 +116,23 @@ void TestMatchDocument(std::string_view mark, const ExecutionPolicy& policy) {
     }
 }
 
+template<typename ExecutionPolicy>
+void TestFindTopDocuments(std::string_view mark, const ExecutionPolicy& policy) {
+    const SearchServer& search_server = const_search_server;
+    std::cerr << "Benchmarking of "s << mark <<" FindTopDocuments:\n"s;
+    const auto queries = GenerateQueries(SearchServerGenerator::dictionary, 100, 70);
+    {
+        LOG_DURATION(mark);
+        double total_relevance = 0.0;
+        for (const auto& query : queries) {
+            for (const auto& document : search_server.FindTopDocuments(policy, query)) {
+                total_relevance += document.relevance;
+            }
+        }
+        std::cout << total_relevance << std::endl;
+    }
+}
+
 } // namespace benchmark_tests
 
 inline void RunAllBenchmarkTests() {
@@ -126,4 +143,7 @@ inline void RunAllBenchmarkTests() {
 
     TestMatchDocument("seq", std::execution::seq);
     TestMatchDocument("par", std::execution::par);
+
+    TestFindTopDocuments("seq", std::execution::seq);
+    TestFindTopDocuments("par", std::execution::par);
 }
