@@ -127,8 +127,32 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
                             });
 }
 
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const std::execution::sequenced_policy&, std::string_view raw_query, DocumentStatus document_status) const {
+    return FindTopDocuments(raw_query, document_status);
+}
+
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const std::execution::parallel_policy&, std::string_view raw_query, DocumentStatus document_status) const {
+    return FindTopDocuments(std::execution::par,
+                            raw_query,
+                            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
+                                return status == document_status;
+                            });
+}
+
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
     return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
+}
+
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const std::execution::sequenced_policy&, std::string_view raw_query) const {
+    return FindTopDocuments(raw_query);
+}
+
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const std::execution::parallel_policy&, std::string_view raw_query) const {
+    return FindTopDocuments(std::execution::par, raw_query, DocumentStatus::ACTUAL);
 }
 
 [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
@@ -290,15 +314,5 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
 }
 
 [[nodiscard]] SearchServer::Query SearchServer::UniqueParseQuery(std::string_view text) const {
-    Query query = NonUniqueParseQuery(text);
-
-    std::sort(query.plus_words.begin(), query.plus_words.end());
-    auto begin_of_plus_words_to_remove = std::unique(query.plus_words.begin(), query.plus_words.end());
-    query.plus_words.erase(begin_of_plus_words_to_remove, query.plus_words.end());
-
-    std::sort(query.minus_words.begin(), query.minus_words.end());
-    auto begin_of_minus_words_to_remove = std::unique(query.minus_words.begin(), query.minus_words.end());
-    query.minus_words.erase(begin_of_minus_words_to_remove, query.minus_words.end());
-
-    return query;
+    return UniqueParseQuery(std::execution::seq, text);
 }
