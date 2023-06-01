@@ -121,46 +121,23 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
 
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
                                                                    DocumentStatus document_status) const {
-    return FindTopDocuments(raw_query,
-                            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
-                                return status == document_status;
-                            });
-}
-
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::sequenced_policy&, std::string_view raw_query, DocumentStatus document_status) const {
-    return FindTopDocuments(raw_query, document_status);
-}
-
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::parallel_policy&, std::string_view raw_query, DocumentStatus document_status) const {
-    return FindTopDocuments(std::execution::par,
-                            raw_query,
-                            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
-                                return status == document_status;
-                            });
+    return FindTopDocuments(
+            raw_query,
+            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
+                return status == document_status;
+            });
 }
 
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
     return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
 }
 
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::sequenced_policy&, std::string_view raw_query) const {
-    return FindTopDocuments(raw_query);
-}
-
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::parallel_policy&, std::string_view raw_query) const {
-    return FindTopDocuments(std::execution::par, raw_query, DocumentStatus::ACTUAL);
-}
-
-[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-SearchServer::MatchDocument(std::string_view raw_query, int document_id) const {
+[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
+        std::string_view raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
-    const auto query = UniqueParseQuery(raw_query);
+    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::No);
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
@@ -181,19 +158,17 @@ SearchServer::MatchDocument(std::string_view raw_query, int document_id) const {
     return make_tuple(std::move(matched_words), document_data.status);
 }
 
-[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-SearchServer::MatchDocument(const std::execution::sequenced_policy&,
-                            std::string_view raw_query, int document_id) const {
+[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
+        const std::execution::sequenced_policy&, std::string_view raw_query, int document_id) const {
     return MatchDocument(raw_query, document_id);
 }
 
-[[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-SearchServer::MatchDocument(const std::execution::parallel_policy&,
-                            std::string_view raw_query, int document_id) const {
+[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
+        const std::execution::parallel_policy&, std::string_view raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
-    const auto query = NonUniqueParseQuery(raw_query);
+    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::Yes);
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
@@ -217,9 +192,7 @@ SearchServer::MatchDocument(const std::execution::parallel_policy&,
             is_that_document_has_word);
 
     matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
-    std::sort(std::execution::par, matched_words.begin(), matched_words.end());
-    begin_of_matched_words_to_remove = std::unique(matched_words.begin(), matched_words.end());
-    matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
+    RemoveDuplicateWords(std::execution::par, matched_words);
 
     return make_tuple(std::move(matched_words), document_data.status);
 }
@@ -294,25 +267,4 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
         word = word.substr(1);
     }
     return QueryWord{word, is_minus, IsStopWord(word)};
-}
-
-[[nodiscard]] SearchServer::Query SearchServer::NonUniqueParseQuery(std::string_view text) const {
-    Query query;
-    const auto words = SplitIntoWordsView(text);
-    for (const auto word : words) {
-        StringHasNotAnyForbiddenChars(word);
-        const auto query_word = ParseQueryWord(word);
-        if (!(query_word.is_stop)) {
-            if (query_word.is_minus) {
-                query.minus_words.push_back(query_word.content);
-            } else {
-                query.plus_words.push_back(query_word.content);
-            }
-        }
-    }
-    return query;
-}
-
-[[nodiscard]] SearchServer::Query SearchServer::UniqueParseQuery(std::string_view text) const {
-    return UniqueParseQuery(std::execution::seq, text);
 }

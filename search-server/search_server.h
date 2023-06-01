@@ -15,13 +15,6 @@
 #include <vector>
 #include <thread>
 
-enum class DocumentStatus {
-    ACTUAL,
-    IRRELEVANT,
-    BANNED,
-    REMOVED,
-};
-
 class SearchServer {
 private:
     inline static constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
@@ -36,20 +29,14 @@ private:
     using Indices = std::map<int, DocumentData>;
     using ReverseIndices = std::map<std::string, std::map<int, double>, std::less<>>;
 
+    using MatchingWordsAndDocStatus = std::tuple<std::vector<std::string_view>, DocumentStatus>;
+
 public:
     // Constructors
 
-    template<typename StringContainer,
-             std::enable_if_t<
-                    std::is_same_v<typename std::remove_reference_t<StringContainer>::value_type, std::string>,
-                    bool> = true>
+    template<typename StringContainer, typename ValueType = typename std::decay_t<StringContainer>::value_type,
+             std::enable_if_t<std::is_convertible_v<ValueType, std::string_view>, bool> = true>
     explicit SearchServer(StringContainer&& stop_words);
-
-    template<typename StringViewContainer,
-             std::enable_if_t<
-                    std::is_same_v<typename std::remove_reference_t<StringViewContainer>::value_type, std::string_view>,
-                    bool> = true>
-    explicit SearchServer(StringViewContainer&& stop_words);
 
     explicit SearchServer(std::string_view stop_words);
 
@@ -62,7 +49,6 @@ public:
     // Iterators
 
     [[nodiscard]] std::set<int>::const_iterator begin() const noexcept;
-
     [[nodiscard]] std::set<int>::const_iterator end() const noexcept;
 
     // Modification
@@ -71,9 +57,7 @@ public:
                      const std::vector<int>& ratings);
 
     void RemoveDocument(int document_id);
-
     void RemoveDocument(const std::execution::sequenced_policy&, int document_id);
-
     void RemoveDocument(const std::execution::parallel_policy&, int document_id);
 
     // Search
@@ -81,41 +65,31 @@ public:
     template<typename Predicate>
     [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query, Predicate predicate) const;
 
-    template<typename Predicate>
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::sequenced_policy&,
-                                                         std::string_view raw_query, Predicate predicate) const;
-
-    template<typename Predicate>
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::parallel_policy& par_policy,
+    template<typename ExecutionPolicy, typename Predicate>
+    [[nodiscard]] std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
                                                          std::string_view raw_query, Predicate predicate) const;
 
     [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query,
                                                          DocumentStatus document_status) const;
 
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::sequenced_policy&,
-                                                         std::string_view raw_query,
-                                                         DocumentStatus document_status) const;
-
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::parallel_policy&,
+    template<typename ExecutionPolicy>
+    [[nodiscard]] std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
                                                          std::string_view raw_query,
                                                          DocumentStatus document_status) const;
 
     [[nodiscard]] std::vector<Document> FindTopDocuments(std::string_view raw_query) const;
 
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::sequenced_policy&,
+    template<typename ExecutionPolicy>
+    [[nodiscard]] std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
                                                          std::string_view raw_query) const;
 
-    [[nodiscard]] std::vector<Document> FindTopDocuments(const std::execution::parallel_policy& policy,
-                                                         std::string_view raw_query) const;
+    [[nodiscard]] MatchingWordsAndDocStatus MatchDocument(std::string_view raw_query, int document_id) const;
 
-    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-    MatchDocument(std::string_view raw_query, int document_id) const;
+    [[nodiscard]] MatchingWordsAndDocStatus MatchDocument(const std::execution::sequenced_policy&,
+                                                          std::string_view raw_query, int document_id) const;
 
-    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-    MatchDocument(const std::execution::sequenced_policy&, std::string_view raw_query, int document_id) const;
-
-    [[nodiscard]] std::tuple<std::vector<std::string_view>, DocumentStatus>
-    MatchDocument(const std::execution::parallel_policy&, std::string_view raw_query, int document_id) const;
+    [[nodiscard]] MatchingWordsAndDocStatus MatchDocument(const std::execution::parallel_policy&,
+                                                          std::string_view raw_query, int document_id) const;
 
 private:
     std::set<std::string, std::less<>> stop_words_;
@@ -158,12 +132,11 @@ private:
 
     [[nodiscard]] QueryWord ParseQueryWord(std::string_view word) const;
 
-    [[nodiscard]] Query NonUniqueParseQuery(std::string_view text) const;
-
-    [[nodiscard]] Query UniqueParseQuery(std::string_view text) const;
+    enum class WordsRepeatable : bool { Yes = true, No = false, };
 
     template<typename ExecutionPolicy>
-    [[nodiscard]] Query UniqueParseQuery(const ExecutionPolicy& policy, std::string_view text) const;
+    [[nodiscard]] Query ParseQuery(const ExecutionPolicy& policy,
+                                   std::string_view text, WordsRepeatable words_can_be_repeated) const;
 
     // Search
 
@@ -183,26 +156,12 @@ private:
 
 // Constructors
 
-template<typename StringContainer,
-         std::enable_if_t<
-                 std::is_same_v<typename std::remove_reference_t<StringContainer>::value_type, std::string>,
-                 bool>>
+template<typename StringContainer, typename ValueType,
+         std::enable_if_t<std::is_convertible_v<ValueType, std::string_view>, bool>>
 SearchServer::SearchServer(StringContainer&& stop_words) {
     for (auto& stop_word : stop_words) {
         if (!stop_word.empty() && (StringHasNotAnyForbiddenChars(stop_word), true)) {
-            stop_words_.insert(std::move(stop_word));
-        }
-    }
-}
-
-template<typename StringViewContainer,
-         std::enable_if_t<
-                 std::is_same_v<typename std::remove_reference_t<StringViewContainer>::value_type, std::string_view>,
-                 bool>>
-SearchServer::SearchServer(StringViewContainer&& stop_words) {
-    for (auto stop_word : stop_words) {
-        if (!stop_word.empty() && (StringHasNotAnyForbiddenChars(stop_word), true)) {
-            stop_words_.insert(std::string(stop_word));
+            stop_words_.insert(std::string(std::move(stop_word)));
         }
     }
 }
@@ -210,17 +169,28 @@ SearchServer::SearchServer(StringViewContainer&& stop_words) {
 // Parsing
 
 template<typename ExecutionPolicy>
-[[nodiscard]] SearchServer::Query SearchServer::UniqueParseQuery(const ExecutionPolicy& policy,
-                                                                 std::string_view text) const {
-    Query query = NonUniqueParseQuery(text);
+[[nodiscard]] SearchServer::Query SearchServer::ParseQuery(
+        const ExecutionPolicy& policy, std::string_view text, WordsRepeatable words_can_be_repeated) const {
+    Query query;
+    const auto words = SplitIntoWordsView(text);
+    for (const auto word : words) {
+        StringHasNotAnyForbiddenChars(word);
+        const auto query_word = ParseQueryWord(word);
+        if (!(query_word.is_stop)) {
+            if (query_word.is_minus) {
+                query.minus_words.push_back(query_word.content);
+            } else {
+                query.plus_words.push_back(query_word.content);
+            }
+        }
+    }
 
-    std::sort(policy, query.plus_words.begin(), query.plus_words.end());
-    auto begin_of_plus_words_to_remove = std::unique(query.plus_words.begin(), query.plus_words.end());
-    query.plus_words.erase(begin_of_plus_words_to_remove, query.plus_words.end());
+    if (static_cast<bool>(words_can_be_repeated)) {
+        return query;
+    }
 
-    std::sort(policy, query.minus_words.begin(), query.minus_words.end());
-    auto begin_of_minus_words_to_remove = std::unique(query.minus_words.begin(), query.minus_words.end());
-    query.minus_words.erase(begin_of_minus_words_to_remove, query.minus_words.end());
+    RemoveDuplicateWords(policy, query.plus_words);
+    RemoveDuplicateWords(policy, query.minus_words);
 
     return query;
 }
@@ -230,34 +200,18 @@ template<typename ExecutionPolicy>
 template<typename Predicate>
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
                                                                    Predicate predicate) const {
-    auto result = FindAllDocuments(UniqueParseQuery(raw_query), predicate);
-
-    std::sort(result.begin(), result.end(),
-              [](const Document& lhs, const Document& rhs) {
-                  if (std::abs(lhs.relevance - rhs.relevance) < ERROR_MARGIN) {
-                      return lhs.rating > rhs.rating;
-                  }
-                  return lhs.relevance > rhs.relevance;
-              });
-
-    if (result.size() > MAX_RESULT_DOCUMENT_COUNT) {
-        result.resize(MAX_RESULT_DOCUMENT_COUNT);
-    }
-    return result;
+    return FindTopDocuments(std::execution::seq, raw_query, predicate);
 }
 
-template<typename Predicate>
+template<typename ExecutionPolicy, typename Predicate>
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::sequenced_policy&, std::string_view raw_query, Predicate predicate) const {
-    return FindTopDocuments(raw_query, predicate);
-}
+        const ExecutionPolicy& policy, std::string_view raw_query, Predicate predicate) const {
+    auto result = FindAllDocuments(
+            policy,
+            ParseQuery(policy, raw_query, WordsRepeatable::No),
+            predicate);
 
-template<typename Predicate>
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
-        const std::execution::parallel_policy& par_policy, std::string_view raw_query, Predicate predicate) const {
-    auto result = FindAllDocuments(par_policy, UniqueParseQuery(par_policy, raw_query), predicate);
-
-    std::sort(par_policy,
+    std::sort(policy,
               result.begin(), result.end(),
               [](const Document& lhs, const Document& rhs) {
                   if (std::abs(lhs.relevance - rhs.relevance) < ERROR_MARGIN) {
@@ -270,6 +224,23 @@ template<typename Predicate>
         result.resize(MAX_RESULT_DOCUMENT_COUNT);
     }
     return result;
+}
+
+template<typename ExecutionPolicy>
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const ExecutionPolicy& policy, std::string_view raw_query, DocumentStatus document_status) const {
+    return FindTopDocuments(
+            policy,
+            raw_query,
+            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
+                return status == document_status;
+            });
+}
+
+template<typename ExecutionPolicy>
+[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
+        const ExecutionPolicy& policy, std::string_view raw_query) const {
+    return FindTopDocuments(policy, raw_query, DocumentStatus::ACTUAL);
 }
 
 template<typename Predicate>
