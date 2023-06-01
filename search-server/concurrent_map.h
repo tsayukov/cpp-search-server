@@ -17,6 +17,9 @@ private:
 public:
     static_assert(std::is_integral_v<Key>, "ConcurrentMap supports only integer keys");
 
+    using key_type = Key;
+    using mapped_type = Value;
+
     struct Access {
         Access(const Key& key, Bucket& bucket)
                 : guard(bucket.mutex)
