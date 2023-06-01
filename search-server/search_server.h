@@ -150,6 +150,13 @@ private:
     template<typename Predicate>
     [[nodiscard]] std::vector<Document> FindAllDocuments(const std::execution::parallel_policy& par_policy,
                                                          const Query& query, Predicate predicate) const;
+
+    template<typename ExecutionPolicy, typename Map, typename Predicate>
+    void ComputeDocumentsRelevance(const ExecutionPolicy& policy,
+                                   Map& document_to_relevance,
+                                   const Query& query, Predicate predicate) const;
+
+    [[nodiscard]] std::vector<Document> PrepareResult(const std::map<int, double>& document_to_relevance) const;
 };
 
 // Search Server template implementation
@@ -246,41 +253,8 @@ template<typename ExecutionPolicy>
 template<typename Predicate>
 [[nodiscard]] std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Predicate predicate) const {
     std::map<int, double> doc_to_relevance;
-    for (const auto& plus_word : query.plus_words) {
-        auto iter = word_to_document_frequencies_.find(plus_word);
-        if (iter == word_to_document_frequencies_.end()) {
-            continue;
-        }
-        const auto& document_frequencies = iter->second;
-
-        // Computation TF-IDF (term frequency–inverse document frequency)
-        // source: https://en.wikipedia.org/wiki/Tf%E2%80%93idf
-        const double idf = ComputeInverseDocumentFrequency(document_frequencies.size());
-        for (const auto& [document_id, tf] : document_frequencies) {
-            const auto& document_data = documents_.at(document_id);
-            if (predicate(document_id, document_data.status, document_data.rating)) {
-                doc_to_relevance[document_id] += tf * idf;
-            }
-        }
-    }
-
-    for (const auto& minus_word : query.minus_words) {
-        auto iter = word_to_document_frequencies_.find(minus_word);
-        if (iter == word_to_document_frequencies_.end()) {
-            continue;
-        }
-        const auto& document_frequencies = iter->second;
-        for (const auto [document_id, _] : document_frequencies) {
-            doc_to_relevance.erase(document_id);
-        }
-    }
-
-    std::vector<Document> result;
-    result.reserve(doc_to_relevance.size());
-    for (const auto [document_id, relevance] : doc_to_relevance) {
-        result.emplace_back(document_id, relevance, documents_.at(document_id).rating);
-    }
-    return result;
+    ComputeDocumentsRelevance(std::execution::seq, doc_to_relevance, query, predicate);
+    return PrepareResult(doc_to_relevance);
 }
 
 template<typename Predicate>
@@ -293,11 +267,20 @@ template<typename Predicate>
 [[nodiscard]] std::vector<Document> SearchServer::FindAllDocuments(
         const std::execution::parallel_policy& par_policy, const Query& query, Predicate predicate) const {
     ConcurrentMap<int, double> concurrent_doc_to_relevance(std::thread::hardware_concurrency());
+    ComputeDocumentsRelevance(par_policy, concurrent_doc_to_relevance, query, predicate);
+    return PrepareResult(concurrent_doc_to_relevance.BuildOrdinaryMap());
+}
+
+template<typename ExecutionPolicy, typename Map, typename Predicate>
+void SearchServer::ComputeDocumentsRelevance(const ExecutionPolicy& policy,
+                                             Map& document_to_relevance,
+                                             const Query& query, Predicate predicate) const {
+    static_assert(std::is_integral_v<typename Map::key_type> && std::is_floating_point_v<typename Map::mapped_type>);
 
     std::for_each(
-            par_policy,
+            policy,
             query.plus_words.begin(), query.plus_words.end(),
-            [this, predicate, &concurrent_doc_to_relevance](auto plus_word_view) {
+            [this, predicate, &document_to_relevance](auto plus_word_view) {
                 auto iter = word_to_document_frequencies_.find(plus_word_view);
                 if (iter == word_to_document_frequencies_.end()) {
                     return;
@@ -310,32 +293,24 @@ template<typename Predicate>
                 for (const auto& [document_id, tf] : document_frequencies) {
                     const auto& document_data = documents_.at(document_id);
                     if (predicate(document_id, document_data.status, document_data.rating)) {
-                        concurrent_doc_to_relevance[document_id].ref_to_value += tf * idf;
+                        document_to_relevance[document_id] += tf * idf;
                     }
                 }
             });
 
     std::for_each(
-            par_policy,
+            policy,
             query.minus_words.begin(), query.minus_words.end(),
-            [this, &concurrent_doc_to_relevance](auto minus_word_view) {
+            [this, &document_to_relevance](auto minus_word_view) {
                 auto iter = word_to_document_frequencies_.find(minus_word_view);
                 if (iter == word_to_document_frequencies_.end()) {
                     return;
                 }
                 const auto& document_frequencies = iter->second;
                 for (const auto [document_id, _] : document_frequencies) {
-                    concurrent_doc_to_relevance.erase(document_id);
+                    document_to_relevance.erase(document_id);
                 }
             });
-
-    std::vector<Document> result;
-    const auto doc_to_relevance = concurrent_doc_to_relevance.BuildOrdinaryMap();
-    result.reserve(doc_to_relevance.size());
-    for (const auto [document_id, relevance] : doc_to_relevance) {
-        result.emplace_back(document_id, relevance, documents_.at(document_id).rating);
-    }
-    return result;
 }
 
 // The end of Search Server template implementation

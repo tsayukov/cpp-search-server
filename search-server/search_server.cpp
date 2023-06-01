@@ -197,6 +197,16 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
     return make_tuple(std::move(matched_words), document_data.status);
 }
 
+[[nodiscard]] std::vector<Document> SearchServer::PrepareResult(
+        const std::map<int, double>& document_to_relevance) const {
+    std::vector<Document> result;
+    result.reserve(document_to_relevance.size());
+    for (const auto [document_id, relevance] : document_to_relevance) {
+        result.emplace_back(document_id, relevance, documents_.at(document_id).rating);
+    }
+    return result;
+}
+
 // Checks
 
 void SearchServer::StringHasNotAnyForbiddenChars(std::string_view s) {
