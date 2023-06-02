@@ -27,6 +27,8 @@ private:
     };
 
     using Indices = std::map<int, DocumentData>;
+    // Storage for original words represented as std::string.
+    // Words in other containers except stop-words only refer to these.
     using ReverseIndices = std::map<std::string, std::map<int, double>, std::less<>>;
 
     using MatchingWordsAndDocStatus = std::tuple<std::vector<std::string_view>, DocumentStatus>;
@@ -166,6 +168,10 @@ private:
 template<typename StringContainer, typename ValueType,
          std::enable_if_t<std::is_convertible_v<ValueType, std::string_view>, bool>>
 SearchServer::SearchServer(StringContainer&& stop_words) {
+    static_assert(std::is_same_v<typename std::decay_t<StringContainer>::value_type, ValueType>,
+                  "ValueType must not be passed by a user; it must be deduced as value_type of StringContainer and "
+                  "it exists only to make std::enable_if_t less verbose");
+
     for (auto& stop_word : stop_words) {
         if (!stop_word.empty() && (StringHasNotAnyForbiddenChars(stop_word), true)) {
             stop_words_.insert(std::string(std::move(stop_word)));
