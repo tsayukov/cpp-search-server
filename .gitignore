@@ -1,10 +1,14 @@
-# IDEA files
-.idea
+# All dot directories in the root
+/.*/
 
-# Cmake files
-cmake-build-debug
-cmake-build-release
-CMakeLists.txt
+# JSON Compilation Database
+compile_commands.json
+
+# CMake User Presets
+CMakeUserPresets.json
+
+# CMake build directories
+/*build*
 
 # Prerequisites
 *.d
