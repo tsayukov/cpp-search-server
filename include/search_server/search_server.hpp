@@ -1,7 +1,8 @@
 #ifndef SEARCH_SERVER_SEARCH_SERVER_HPP
 #define SEARCH_SERVER_SEARCH_SERVER_HPP
 
-#include "document.hpp"
+#include <search_server/document.hpp>
+
 #include "string_processing.hpp"
 #include "concurrent_map.hpp"
 
