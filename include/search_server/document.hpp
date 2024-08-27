@@ -16,16 +16,14 @@ enum class DocumentStatus {
 
 /// Document's ranking properties.
 ///
-/// Each document has an \c id identifier, \c rating that is the arithmetic
-/// mean of all its ratings, and \c relevance.
+/// Each document has an \c id identifier, \c relevance, and \c rating that is
+/// the arithmetic mean of all its ratings.
 struct Document {
-    Document() noexcept = default;
+    int id;
+    int rating;
+    double relevance;
 
-    Document(int id, double relevance, int rating) noexcept;
-
-    int id = 0;
-    int rating = 0;
-    double relevance = 0.0;
+    Document(int id = 0, double relevance = 0.0, int rating = 0) noexcept;
 };
 
 std::ostream& operator<<(std::ostream& output, const Document& document);
