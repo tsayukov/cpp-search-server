@@ -11,16 +11,18 @@ using namespace std::string_literals;
 // Constructors
 
 SearchServer::SearchServer(std::string_view stop_words)
-        : SearchServer(SplitIntoWords(stop_words)) {
+        : SearchServer(details::SplitIntoWords(stop_words)) {
 }
 
-// Capacity and Lookup
+// Capacity
 
-[[nodiscard]] int SearchServer::GetDocumentCount() const noexcept {
+int SearchServer::GetDocumentCount() const noexcept {
     return static_cast<int>(documents_.size());
 }
 
-[[nodiscard]] const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const {
+// Lookup
+
+const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const {
     static const std::map<std::string_view, double> empty_map;
 
     if (auto it = documents_.find(document_id); it != documents_.end()) {
@@ -31,17 +33,19 @@ SearchServer::SearchServer(std::string_view stop_words)
 
 // Iterators
 
-[[nodiscard]] std::set<int>::const_iterator SearchServer::begin() const noexcept {
+std::set<int>::const_iterator SearchServer::begin() const noexcept {
     return document_ids_.begin();
 }
 
-[[nodiscard]] std::set<int>::const_iterator SearchServer::end() const noexcept {
+std::set<int>::const_iterator SearchServer::end() const noexcept {
     return document_ids_.end();
 }
 
-// Modification
+// Modifiers
 
-void SearchServer::AddDocument(int document_id, std::string_view document, DocumentStatus status,
+void SearchServer::AddDocument(int document_id,
+                               std::string_view document,
+                               DocumentStatus status,
                                const std::vector<int>& ratings) {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdDoesntExist(document_id);
@@ -121,8 +125,9 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
 
 // Search
 
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
-                                                                   DocumentStatus document_status) const {
+[[nodiscard]]
+std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
+                                                     DocumentStatus document_status) const {
     return FindTopDocuments(
             raw_query,
             [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
@@ -260,7 +265,7 @@ void SearchServer::CheckDocumentIdExists(int document_id) const {
 
 std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view text) const {
     std::vector<std::string> result;
-    auto words = SplitIntoWords(text);
+    auto words = details::SplitIntoWords(text);
     for (auto& word : words) {
         StringHasNotAnyForbiddenChars(word);
         if (!IsStopWord(word)) {

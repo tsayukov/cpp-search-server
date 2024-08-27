@@ -1,5 +1,8 @@
-#include "string_processing.hpp"
+#include <search_server/details/string_processing.hpp>
 
+namespace search_server::details {
+
+[[nodiscard]]
 std::vector<std::string> SplitIntoWords(std::string_view text) {
     std::vector<std::string> words;
     std::string word;
@@ -20,6 +23,7 @@ std::vector<std::string> SplitIntoWords(std::string_view text) {
     return words;
 }
 
+[[nodiscard]]
 std::vector<std::string_view> SplitIntoWordsView(std::string_view text) {
     using pos_t = std::size_t;
     using count_t = std::size_t;
@@ -38,3 +42,5 @@ std::vector<std::string_view> SplitIntoWordsView(std::string_view text) {
 
     return words;
 }
+
+} // namespace search_server::details
