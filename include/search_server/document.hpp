@@ -1,8 +1,12 @@
+/// \file document.hpp
+/// \brief Document's properties related to its ranking and current status
+
 #ifndef SEARCH_SERVER_DOCUMENT_HPP
 #define SEARCH_SERVER_DOCUMENT_HPP
 
 #include <ostream>
 
+/// Document's current status
 enum class DocumentStatus {
     ACTUAL,
     IRRELEVANT,
@@ -10,6 +14,10 @@ enum class DocumentStatus {
     REMOVED,
 };
 
+/// Document's ranking properties.
+///
+/// Each document has an \c id identifier, \c rating that is the arithmetic
+/// mean of all its ratings, and \c relevance.
 struct Document {
     Document() noexcept = default;
 
