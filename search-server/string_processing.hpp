@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCH_SERVER_STRING_PROCESSING_HPP
+#define SEARCH_SERVER_STRING_PROCESSING_HPP
 
 #include <algorithm>
 #include <string>
@@ -17,3 +18,5 @@ void RemoveDuplicateWords(const ExecutionPolicy& policy, ContiguousContainer& co
     auto begin_of_words_to_remove = std::unique(container.begin(), container.end());
     container.erase(begin_of_words_to_remove, container.end());
 }
+
+#endif // SEARCH_SERVER_STRING_PROCESSING_HPP

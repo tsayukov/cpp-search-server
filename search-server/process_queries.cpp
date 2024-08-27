@@ -1,4 +1,4 @@
-#include "process_queries.h"
+#include "process_queries.hpp"
 
 #include <execution>
 

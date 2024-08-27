@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCH_SERVER_CONCURRENT_MAP_HPP
+#define SEARCH_SERVER_CONCURRENT_MAP_HPP
 
 #include <map>
 #include <vector>
@@ -66,3 +67,5 @@ private:
         return buckets_[static_cast<std::size_t>(key) % buckets_.size()];
     }
 };
+
+#endif // SEARCH_SERVER_CONCURRENT_MAP_HPP

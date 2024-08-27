@@ -1,6 +1,7 @@
-#pragma once
+#ifndef SEARCH_SERVER_REQUEST_QUEUE_HPP
+#define SEARCH_SERVER_REQUEST_QUEUE_HPP
 
-#include "search_server.h"
+#include <search_server/search_server.hpp>
 
 #include <deque>
 #include <string>
@@ -47,3 +48,5 @@ std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query,
 }
 
 // The end of RequestQueue template implementation
+
+#endif // SEARCH_SERVER_REQUEST_QUEUE_HPP

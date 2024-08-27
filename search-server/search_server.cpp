@@ -1,4 +1,4 @@
-#include "search_server.h"
+#include <search_server/search_server.hpp>
 
 #include <numeric>
 #include <stdexcept>

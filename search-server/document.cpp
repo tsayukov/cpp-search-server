@@ -1,4 +1,4 @@
-#include "document.h"
+#include <search_server/document.hpp>
 
 Document::Document(int id, double relevance, int rating) noexcept
         : id(id)

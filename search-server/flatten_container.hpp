@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCH_SERVER_FLATTEN_CONTAINER_HPP
+#define SEARCH_SERVER_FLATTEN_CONTAINER_HPP
 
 #include <utility>
 
@@ -251,3 +252,5 @@ template<typename Container>
 auto MakeFlattenContainer(Container&& container) {
     return FlattenContainer<std::remove_reference_t<Container>>(std::forward<Container>(container));
 }
+
+#endif // SEARCH_SERVER_FLATTEN_CONTAINER_HPP

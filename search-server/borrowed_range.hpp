@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCH_SERVER_BORROWED_RANGE_HPP
+#define SEARCH_SERVER_BORROWED_RANGE_HPP
 
 template<typename T>
 class BorrowedRange {
@@ -20,3 +21,5 @@ private:
     T begin_;
     T end_;
 };
+
+#endif // SEARCH_SERVER_BORROWED_RANGE_HPP

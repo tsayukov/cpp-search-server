@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEARCH_SERVER_DOCUMENT_HPP
+#define SEARCH_SERVER_DOCUMENT_HPP
 
 #include <ostream>
 
@@ -20,3 +21,5 @@ struct Document {
 };
 
 std::ostream& operator<<(std::ostream& output, const Document& document);
+
+#endif // SEARCH_SERVER_DOCUMENT_HPP

@@ -1,8 +1,9 @@
-#pragma once
+#ifndef SEARCH_SERVER_SEARCH_SERVER_HPP
+#define SEARCH_SERVER_SEARCH_SERVER_HPP
 
-#include "document.h"
-#include "string_processing.h"
-#include "concurrent_map.h"
+#include "document.hpp"
+#include "string_processing.hpp"
+#include "concurrent_map.hpp"
 
 #include <algorithm>
 #include <execution>
@@ -320,3 +321,5 @@ void SearchServer::ComputeDocumentsRelevance(const ExecutionPolicy& policy,
 }
 
 // The end of Search Server template implementation
+
+#endif // SEARCH_SERVER_SEARCH_SERVER_HPP

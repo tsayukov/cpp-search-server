@@ -1,6 +1,7 @@
-#pragma once
+#ifndef SEARCH_SERVER_PAGINATOR_HPP
+#define SEARCH_SERVER_PAGINATOR_HPP
 
-#include "borrowed_range.h"
+#include "borrowed_range.hpp"
 
 #include <iterator>
 #include <ostream>
@@ -136,3 +137,5 @@ template <typename Container>
 auto Paginate(const Container& c, std::size_t page_size) noexcept(noexcept(std::begin(c)) && noexcept(std::end(c))) {
     return Paginator(std::begin(c), std::end(c), page_size);
 }
+
+#endif // SEARCH_SERVER_PAGINATOR_HPP
