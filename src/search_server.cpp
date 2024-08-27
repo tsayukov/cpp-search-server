@@ -129,7 +129,7 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
 }
 
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
-    return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
+    return FindTopDocuments(raw_query, DocumentStatus::kActual);
 }
 
 [[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
@@ -137,7 +137,7 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
-    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::No);
+    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::kNo);
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 
@@ -168,7 +168,7 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int do
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
-    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::Yes);
+    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::kYes);
     const auto& document_data = documents_.at(document_id);
     const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
 

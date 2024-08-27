@@ -136,7 +136,7 @@ private:
 
     [[nodiscard]] QueryWord ParseQueryWord(std::string_view word) const;
 
-    enum class WordsRepeatable : bool { Yes = true, No = false, };
+    enum class WordsRepeatable : bool { kYes = true, kNo = false, };
 
     template<typename ExecutionPolicy>
     [[nodiscard]] Query ParseQuery(const ExecutionPolicy& policy,
@@ -223,7 +223,7 @@ template<typename ExecutionPolicy, typename Predicate>
         const ExecutionPolicy& policy, std::string_view raw_query, Predicate predicate) const {
     auto result = FindAllDocuments(
             policy,
-            ParseQuery(policy, raw_query, WordsRepeatable::No),
+            ParseQuery(policy, raw_query, WordsRepeatable::kNo),
             predicate);
 
     std::sort(policy,
@@ -255,7 +255,7 @@ template<typename ExecutionPolicy>
 template<typename ExecutionPolicy>
 [[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(
         const ExecutionPolicy& policy, std::string_view raw_query) const {
-    return FindTopDocuments(policy, raw_query, DocumentStatus::ACTUAL);
+    return FindTopDocuments(policy, raw_query, DocumentStatus::kActual);
 }
 
 template<typename Predicate>

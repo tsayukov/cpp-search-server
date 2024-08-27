@@ -8,10 +8,10 @@
 
 /// Document's current status
 enum class DocumentStatus {
-    ACTUAL,
-    IRRELEVANT,
-    BANNED,
-    REMOVED,
+    kActual,
+    kIrrelevant,
+    kBanned,
+    kRemoved,
 };
 
 /// Document's ranking properties.

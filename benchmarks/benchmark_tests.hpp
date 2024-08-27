@@ -79,7 +79,7 @@ inline const SearchServer const_search_server = [] {
     const std::vector<int> ratings = {1, 2, 3};
     for (std::size_t i = 0; i < SearchServerGenerator::documents.size(); ++i) {
         int document_id = static_cast<int>(i);
-        search_server.AddDocument(document_id, SearchServerGenerator::documents[i], DocumentStatus::ACTUAL, ratings);
+        search_server.AddDocument(document_id, SearchServerGenerator::documents[i], DocumentStatus::kActual, ratings);
     }
     return search_server;
 }();

@@ -35,11 +35,11 @@ inline void TestRangeBasedForLoop() {
     {
         const std::vector<int> ratings = {1, 2, 3};
         SearchServer server("and in with"sv);
-        server.AddDocument(0, "white cat"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(1, "black cat"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(5, "blue cat"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(10, "another blue cat"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(0, "white cat"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(1, "black cat"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(5, "blue cat"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(10, "another blue cat"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::kActual, ratings);
         std::vector<int> res;
         for (const auto id : server) {
             res.push_back(id);
@@ -56,7 +56,7 @@ inline void TestAddDocument() {
     const std::vector<int> ratings = {1, 2, 3};
     {
         SearchServer server(""sv);
-        server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(doc_id, content, DocumentStatus::kActual, ratings);
         auto found_docs = server.FindTopDocuments("in"sv);
         ASSERT_EQUAL(found_docs.size(), 1u);
         const Document &doc0 = found_docs[0];
@@ -65,7 +65,7 @@ inline void TestAddDocument() {
     {
         SearchServer server(""sv);
         ASSERT_THROW(
-                server.AddDocument(doc_id, "cat in \x12the city"sv, DocumentStatus::ACTUAL, ratings),
+                server.AddDocument(doc_id, "cat in \x12the city"sv, DocumentStatus::kActual, ratings),
                 std::invalid_argument);
         auto found_docs = server.FindTopDocuments("in"sv);
         ASSERT(found_docs.empty());
@@ -81,11 +81,11 @@ inline void TestRemoveDocument() {
         ASSERT_EQUAL(server.GetDocumentCount(), 0);
     }
     const std::vector<int> ratings = {1, 2, 3};
-    server.AddDocument(0, "white cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(1, "black cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(5, "blue cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(10, "another blue cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(0, "white cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(1, "black cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(5, "blue cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(10, "another blue cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::kActual, ratings);
     {
         server.RemoveDocument(2);
         std::vector<int> res(server.begin(), server.end());
@@ -108,11 +108,11 @@ inline void TestGetWordFrequencies() {
         ASSERT(server.GetWordFrequencies(1).empty());
     }
     const std::vector<int> ratings = {1, 2, 3};
-    server.AddDocument(0, "white cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(1, "black cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(5, "blue cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(10, "another blue cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(0, "white cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(1, "black cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(5, "blue cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(10, "another blue cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(100, "blue cat and blue kitty"sv, DocumentStatus::kActual, ratings);
     {
         std::map<std::string_view, double> answer = {{"white"sv, 1.0 / 2}, {"cat"sv, 1.0 / 2}};
         ASSERT_EQUAL(server.GetWordFrequencies(0), answer);
@@ -129,7 +129,7 @@ inline void TestExcludeStopWordsFromAddedDocumentContent() {
     const std::vector<int> ratings = {1, 2, 3};
     {
         SearchServer server("in the"sv);
-        server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(doc_id, content, DocumentStatus::kActual, ratings);
         auto found_docs = server.FindTopDocuments("in"sv);
         ASSERT_HINT(found_docs.empty(), "Stop words must be excluded from documents"s);
     }
@@ -140,7 +140,7 @@ inline void TestExcludeDocumentsWithMinusWords() {
     const auto content = "cat in the city"sv;
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server(""sv);
-    server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(doc_id, content, DocumentStatus::kActual, ratings);
     {
         auto found_docs = server.FindTopDocuments("cat -city -town -village"sv);
         ASSERT_HINT(found_docs.empty(), "Relevant documents with minus words must be excluded from the result"s);
@@ -163,7 +163,7 @@ inline void TestMatchingDocuments() {
     const auto content = "cats in the city of cats"sv;
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server(""sv);
-    server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(doc_id, content, DocumentStatus::kActual, ratings);
     {
         auto [match_words, _] = server.MatchDocument("beautiful cats city"sv, doc_id);
         ASSERT_EQUAL_HINT(match_words.size(), 2u,
@@ -184,10 +184,10 @@ inline void TestMatchingDocuments() {
 inline void TestSortingDocumentsByRelevance() {
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server(""sv);
-    server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(6, "cat and dog live in the house"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(6, "cat and dog live in the house"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::kActual, ratings);
     auto found_docs = server.FindTopDocuments("cat dog bird"sv);
     std::vector<double> result;
     result.reserve(found_docs.size());
@@ -204,9 +204,9 @@ inline void TestSortingDocumentsByRelevance() {
 
 inline void TestDocumentRating() {
     SearchServer server(""sv);
-    server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::ACTUAL, {});
-    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::ACTUAL, {5});
-    server.AddDocument(3, "dog lives in the house"sv, DocumentStatus::ACTUAL, {5, 5, 5});
+    server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::kActual, {});
+    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, {5});
+    server.AddDocument(3, "dog lives in the house"sv, DocumentStatus::kActual, {5, 5, 5});
     {
         auto found_docs = server.FindTopDocuments("nobody"sv);
         ASSERT_EQUAL_HINT(found_docs[0].rating, 0,
@@ -224,10 +224,10 @@ inline void TestDocumentRating() {
 
 inline void TestFindTopDocumentsWithPredicate() {
     SearchServer server(""sv);
-    server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::IRRELEVANT, { 0 });
-    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::ACTUAL, { 5 });
-    server.AddDocument(3, "cat and dog live in the house"sv, DocumentStatus::ACTUAL, { 5 });
-    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::ACTUAL, { 4 });
+    server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, { 0 });
+    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, { 5 });
+    server.AddDocument(3, "cat and dog live in the house"sv, DocumentStatus::kActual, { 5 });
+    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::kActual, { 4 });
     {
         auto found_docs = server.FindTopDocuments(
                 "cat dog bird"sv,
@@ -250,24 +250,24 @@ inline void TestFindTopDocumentsWithPredicate() {
 
 inline void TestFindTopDocumentsWithSpecifiedStatus() {
     SearchServer server(""sv);
-    server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::IRRELEVANT, { 0 });
-    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::BANNED, { 5 });
-    server.AddDocument(3, "cat and dog live in the house"sv, DocumentStatus::REMOVED, { 5 });
-    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::ACTUAL, { 4 });
+    server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, { 0 });
+    server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kBanned, { 5 });
+    server.AddDocument(3, "cat and dog live in the house"sv, DocumentStatus::kRemoved, { 5 });
+    server.AddDocument(4, "cat and dog and bird live in the house"sv, DocumentStatus::kActual, { 4 });
     {
-        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::IRRELEVANT);
+        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::kIrrelevant);
         ASSERT_EQUAL_HINT(found_docs[0].id, 1, "A relevant document with a specified status must be found"s);
     }
     {
-        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::BANNED);
+        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::kBanned);
         ASSERT_EQUAL_HINT(found_docs[0].id, 2, "A relevant document with a specified status must be found"s);
     }
     {
-        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::REMOVED);
+        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::kRemoved);
         ASSERT_EQUAL_HINT(found_docs[0].id, 3, "A relevant document with a specified status must be found"s);
     }
     {
-        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::ACTUAL);
+        auto found_docs = server.FindTopDocuments("house"sv,DocumentStatus::kActual);
         ASSERT_EQUAL_HINT(found_docs[0].id, 4, "A relevant document with a specified status must be found"s);
     }
 }
@@ -275,9 +275,9 @@ inline void TestFindTopDocumentsWithSpecifiedStatus() {
 inline void TestCorrectnessRelevance() {
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server("is are was a an in the with near at"sv);
-    server.AddDocument(0, "a colorful parrot with green wings and red tail is lost"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(1, "a grey hound with black ears is found at the railway station"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(2, "a white cat with long furry tail is found near the red square"sv, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(0, "a colorful parrot with green wings and red tail is lost"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(1, "a grey hound with black ears is found at the railway station"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(2, "a white cat with long furry tail is found near the red square"sv, DocumentStatus::kActual, ratings);
     {
         auto found_docs = server.FindTopDocuments("white cat long tail"sv);
         ASSERT_EQUAL(found_docs[0].id, 2);
@@ -295,15 +295,15 @@ inline void TestRemoveDuplicates() {
         ASSERT_EQUAL(server.GetDocumentCount(), 0);
     }
     const std::vector<int> ratings = {1, 2, 3};
-    server.AddDocument(0, "white cat"sv, DocumentStatus::ACTUAL, ratings);
-    server.AddDocument(1, "black cat"sv, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(0, "white cat"sv, DocumentStatus::kActual, ratings);
+    server.AddDocument(1, "black cat"sv, DocumentStatus::kActual, ratings);
     {
         ASSERT_EQUAL(server.GetDocumentCount(), 2);
         RemoveDuplicates(server);
         ASSERT_EQUAL(server.GetDocumentCount(), 2);
     }
     {
-        server.AddDocument(2, "black cat"sv, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(2, "black cat"sv, DocumentStatus::kActual, ratings);
         RemoveDuplicates(server);
         std::vector<int> res(server.begin(), server.end());
         std::sort(res.begin(), res.end());
@@ -311,10 +311,10 @@ inline void TestRemoveDuplicates() {
         ASSERT_EQUAL(res, answer);
     }
     {
-        server.AddDocument(2, "black cat"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(3, "cat black"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(4, "cat in black"sv, DocumentStatus::ACTUAL, ratings);
-        server.AddDocument(5, "black cat and black cat"sv, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(2, "black cat"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(3, "cat black"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(4, "cat in black"sv, DocumentStatus::kActual, ratings);
+        server.AddDocument(5, "black cat and black cat"sv, DocumentStatus::kActual, ratings);
         RemoveDuplicates(server);
         std::vector<int> res(server.begin(), server.end());
         std::sort(res.begin(), res.end());
