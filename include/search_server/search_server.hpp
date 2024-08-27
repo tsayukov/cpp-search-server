@@ -21,8 +21,8 @@ namespace search_server {
 
 class SearchServer {
 private:
-    inline static constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
-    inline static constexpr double ERROR_MARGIN = 1e-6;
+    inline static constexpr int kMaxResultDocumentCount = 5;
+    inline static constexpr double kErrorMargin = 1e-6;
 
     struct DocumentData {
         std::map<std::string_view, double> word_frequencies;
@@ -231,14 +231,14 @@ template<typename ExecutionPolicy, typename Predicate>
     std::sort(policy,
               result.begin(), result.end(),
               [](const Document& lhs, const Document& rhs) {
-                  if (std::abs(lhs.relevance - rhs.relevance) < ERROR_MARGIN) {
+                  if (std::abs(lhs.relevance - rhs.relevance) < kErrorMargin) {
                       return lhs.rating > rhs.rating;
                   }
                   return lhs.relevance > rhs.relevance;
               });
 
-    if (result.size() > MAX_RESULT_DOCUMENT_COUNT) {
-        result.resize(MAX_RESULT_DOCUMENT_COUNT);
+    if (result.size() > kMaxResultDocumentCount) {
+        result.resize(kMaxResultDocumentCount);
     }
     return result;
 }
