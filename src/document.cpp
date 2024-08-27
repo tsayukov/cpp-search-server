@@ -1,5 +1,7 @@
 #include <search_server/document.hpp>
 
+namespace search_server {
+
 Document::Document(int id, double relevance, int rating) noexcept
         : id(id)
         , rating(rating)
@@ -12,3 +14,5 @@ std::ostream& operator<<(std::ostream& output, const Document& document) {
             << ", " << "rating = " << document.rating
             << " }";
 }
+
+} // namespace search_server

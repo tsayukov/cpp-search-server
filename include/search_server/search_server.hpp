@@ -17,6 +17,8 @@
 #include <vector>
 #include <thread>
 
+namespace search_server {
+
 class SearchServer {
 private:
     inline static constexpr int MAX_RESULT_DOCUMENT_COUNT = 5;
@@ -322,5 +324,7 @@ void SearchServer::ComputeDocumentsRelevance(const ExecutionPolicy& policy,
 }
 
 // The end of Search Server template implementation
+
+} // namespace search_server
 
 #endif // SEARCH_SERVER_SEARCH_SERVER_HPP

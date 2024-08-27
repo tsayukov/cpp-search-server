@@ -6,6 +6,8 @@
 
 #include <ostream>
 
+namespace search_server {
+
 /// Document's current status
 enum class DocumentStatus {
     kActual,
@@ -27,5 +29,7 @@ struct Document {
 };
 
 std::ostream& operator<<(std::ostream& output, const Document& document);
+
+} // namespace search_server
 
 #endif // SEARCH_SERVER_DOCUMENT_HPP

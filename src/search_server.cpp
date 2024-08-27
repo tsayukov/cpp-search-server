@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <execution>
 
+namespace search_server {
+
 using namespace std::string_literals;
 
 // Constructors
@@ -278,3 +280,5 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
     }
     return QueryWord{word, is_minus, IsStopWord(word)};
 }
+
+} // namespace search_server
