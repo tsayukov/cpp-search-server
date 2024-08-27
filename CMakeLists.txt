@@ -24,6 +24,10 @@ disable_cxx_extensions()
 include_project_module(Externals)
 
 add_project_library(search_server)
+target_link_libraries(search_server_search_server
+  PUBLIC
+    search_server_cxx_standard
+)
 target_include_directories(search_server_search_server
   ${WARNING_GUARD}
   PUBLIC
