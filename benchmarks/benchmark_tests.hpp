@@ -1,8 +1,8 @@
 #pragma once
 
-#include "log_duration.h"
-#include "unit_test_tools.h"
-#include "search_server.h"
+#include "log_duration.hpp"
+#include "unit_test_tools.hpp"
+#include "search_server/search_server.hpp"
 
 #include <execution>
 #include <iostream>

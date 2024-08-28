@@ -1,9 +1,8 @@
 #pragma once
 
-#include "unit_test_tools.h"
-#include "remove_duplicates.h"
-#include "search_server.h"
-#include "flatten_container.h"
+#include "unit_test_tools.hpp"
+#include "search_server/search_server.hpp"
+#include "flatten_container.hpp"
 
 #include <forward_list>
 #include <list>

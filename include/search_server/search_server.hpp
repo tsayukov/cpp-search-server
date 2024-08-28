@@ -195,6 +195,8 @@ private: // Search
     std::vector<Document> PrepareResult(const std::map<int, double>& document_to_relevance) const;
 };
 
+void RemoveDuplicates(SearchServer& server);
+
 } // namespace search_server
 
 #define SEARCH_SERVER_DETAILS_SEARCH_SERVER_HPP_INC_

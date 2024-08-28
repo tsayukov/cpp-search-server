@@ -1,7 +1,6 @@
 #pragma once
 
-#include "remove_duplicates.h"
-#include "search_server.h"
+#include "search_server/search_server.hpp"
 
 #include <string>
 #include <string_view>

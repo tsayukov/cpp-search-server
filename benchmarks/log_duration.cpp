@@ -1,4 +1,4 @@
-#include "log_duration.h"
+#include "log_duration.hpp"
 
 LogDuration::LogDuration(std::string_view operation_name, std::ostream& output_stream)
         : operation_name_(operation_name)

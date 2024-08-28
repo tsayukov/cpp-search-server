@@ -1,6 +1,6 @@
-#include "test_example_functions.h"
+#include "test_example_functions.hpp"
 
-#include "log_duration.h"
+#include "log_duration.hpp"
 
 using namespace std::string_literals;
 

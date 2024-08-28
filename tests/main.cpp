@@ -1,9 +1,8 @@
-#include "unit_tests.h"
-#include "benchmark_tests.h"
+#include "unit_tests.hpp"
+#include "benchmark_tests.hpp"
 
-#include "remove_duplicates.h"
-#include "process_queries.h"
-#include "search_server.h"
+#include "process_queries.hpp"
+#include "search_server/search_server.hpp"
 
 using namespace std;
 
