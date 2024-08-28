@@ -3,7 +3,6 @@
 #include "unit_test_tools.h"
 #include "remove_duplicates.h"
 #include "search_server.h"
-#include "paginator.h"
 #include "flatten_container.h"
 
 #include <forward_list>
@@ -320,42 +319,6 @@ inline void TestRemoveDuplicates() {
         std::sort(res.begin(), res.end());
         const std::vector<int> answer = {0, 1};
         ASSERT_EQUAL(res, answer);
-    }
-}
-
-template<typename T>
-std::vector<std::vector<T>> PaginateIntoVectors(const std::vector<T>& source, const size_t page_size) {
-    std::vector<std::vector<T>> paged_vector;
-    auto pages = Paginate(source, page_size);
-    for (auto page = pages.begin(); page != pages.end(); ++page) {
-        paged_vector.emplace_back(page.begin(), page.end());
-    }
-    return paged_vector;
-}
-
-inline void TestPaginator() {
-    {
-        const std::vector<int> empty_vector;
-        const std::vector<std::vector<int>> answer = {};
-        ASSERT_EQUAL(PaginateIntoVectors(empty_vector, 10), answer);
-    }
-    std::vector<int> vec(10);
-    std::iota(vec.begin(), vec.end(), 1);
-    {
-        const std::vector<std::vector<int>> answer = {};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 0), answer);
-    }
-    {
-        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 10), answer);
-    }
-    {
-        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8}, {9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 8), answer);
-    }
-    {
-        const std::vector<std::vector<int>> answer = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
-        ASSERT_EQUAL(PaginateIntoVectors(vec, 1'000'000'000), answer);
     }
 }
 
