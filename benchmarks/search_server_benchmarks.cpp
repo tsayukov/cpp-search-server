@@ -1,7 +1,5 @@
-#pragma once
-
+#include "generator.hpp"
 #include "log_duration.hpp"
-#include "unit_test_tools.hpp"
 #include "search_server/search_server.hpp"
 
 #include <execution>
@@ -135,7 +133,7 @@ void TestFindTopDocuments(std::string_view mark, const ExecutionPolicy& policy) 
 
 } // namespace benchmark_tests
 
-inline void RunAllBenchmarkTests() {
+void RunAllBenchmarkTests() {
     using namespace benchmark_tests;
 
     TestRemoveDocument("seq", std::execution::seq);
