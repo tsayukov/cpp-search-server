@@ -1,10 +1,11 @@
-#include "process_queries.hpp"
+#include "search_server/process_queries.hpp"
 
 #include <execution>
 
-std::vector<std::vector<Document>> ProcessQueries(
-        const SearchServer& search_server,
-        const std::vector<std::string>& queries) {
+namespace search_server {
+
+std::vector<std::vector<Document>> ProcessQueries(const SearchServer& search_server,
+                                                  const std::vector<std::string>& queries) {
     std::vector<std::vector<Document>> results(queries.size());
     std::transform(
             std::execution::par,
@@ -16,7 +17,15 @@ std::vector<std::vector<Document>> ProcessQueries(
     return results;
 }
 
-auto ProcessQueriesJoined(const SearchServer& search_server, const std::vector<std::string>& queries)
-        -> decltype(MakeFlattenContainer(ProcessQueries(search_server, queries))) {
-    return MakeFlattenContainer(ProcessQueries(search_server, queries));
+std::vector<Document> ProcessQueriesJoined(const SearchServer& search_server,
+                                           const std::vector<std::string>& queries) {
+    std::vector<Document> result;
+    for (auto& query_result : ProcessQueries(search_server, queries)) {
+        for (Document doc : query_result) {
+            result.push_back(doc);
+        }
+    }
+    return result;
 }
+
+} // namespace search_server

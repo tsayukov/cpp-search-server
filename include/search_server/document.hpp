@@ -1,8 +1,8 @@
 /// \file document.hpp
 /// \brief Document's properties related to its ranking and current status
 
-#ifndef SEARCH_SERVER_DOCUMENT_HPP
-#define SEARCH_SERVER_DOCUMENT_HPP
+#ifndef SEARCH_SERVER_DOCUMENT_HPP_
+#define SEARCH_SERVER_DOCUMENT_HPP_
 
 #include <ostream>
 
@@ -32,4 +32,4 @@ std::ostream& operator<<(std::ostream& output, const Document& document);
 
 } // namespace search_server
 
-#endif // SEARCH_SERVER_DOCUMENT_HPP
+#endif // SEARCH_SERVER_DOCUMENT_HPP_
