@@ -5,13 +5,13 @@
 #include <mutex>
 #include <vector>
 
-namespace search_server::details::concurrent {
+namespace search_server::details {
 
 template <typename Key, typename Value>
-class Map {
+class ConcurrentMap {
 private:
     static_assert(std::is_integral_v<Key>,
-                  "search_server::details::concurrent::Map supports only integer keys");
+                  "search_server::details::ConcurrentMap supports only integer keys");
 
     using UnderlyingMap = std::map<Key, Value>;
 
@@ -43,7 +43,7 @@ public:
         }
     };
 
-    explicit Map(size_t bucket_count)
+    explicit ConcurrentMap(size_t bucket_count)
             : buckets_(bucket_count) {}
 
     Access operator[](const Key& key) {
@@ -57,7 +57,7 @@ public:
         (void) bucket.map.erase(key);
     }
 
-    // TODO: replace to cast
+    // TODO: replace to cast?
     UnderlyingMap BuildOrdinaryMap() {
         UnderlyingMap result;
         for (auto& [mutex, map] : buckets_) {
@@ -74,6 +74,6 @@ private: // Bucket access
     }
 };
 
-} // namespace search_server::details::concurrent
+} // namespace search_server::details
 
 #endif // SEARCH_SERVER_DETAILS_CONCURRENT_MAP_HPP_

@@ -126,7 +126,7 @@ std::vector<Document> SearchServer::FindAllDocuments(
         const std::execution::parallel_policy& par_policy,
         const Query& query,
         Predicate predicate) const {
-    details::concurrent::Map<int, double> concurrent_doc_to_relevance(std::thread::hardware_concurrency());
+    details::ConcurrentMap<int, double> concurrent_doc_to_relevance(std::thread::hardware_concurrency());
     ComputeDocumentsRelevance(par_policy, concurrent_doc_to_relevance, query, predicate);
     return PrepareResult(concurrent_doc_to_relevance.BuildOrdinaryMap());
 }
