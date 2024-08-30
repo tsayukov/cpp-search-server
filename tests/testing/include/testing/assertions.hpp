@@ -15,14 +15,14 @@
 #define ASSERT_HINT(expr, hint) \
     testing::AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
-#define ASSERT_THROW(fn, exception)                                                                \
+#define ASSERT_THROW(expression, exception)                                                        \
     do {                                                                                           \
-        constexpr auto error_output = [] {                                                         \
+        constexpr auto error_output = []() -> std::ostream& {                                      \
             return std::cerr << __FILE__ << "(" << __LINE__ << "): " << __FUNCTION__ << ": "       \
-                             << "ASSERT(" << #fn << ") failed. ";                                  \
+                             << "ASSERT(" << #expression << ") failed. ";                          \
         };                                                                                         \
         try {                                                                                      \
-            fn();                                                                                  \
+            expression;                                                                            \
             error_output() << #exception << "must be thrown." << std::endl;                        \
             std::abort();                                                                          \
         } catch (const exception&) {                                                               \
@@ -40,6 +40,7 @@ void AssertEqualImpl(const T& t, const U& u,
                      std::string_view t_str_repr, std::string_view u_str_repr,
                      std::string_view file_name, std::string_view fn_name, unsigned line_number,
                      std::string_view hint) {
+    using namespace testing::details;
     if (t != u) {
         std::cerr << std::boolalpha
                   << file_name << "(" << line_number << "): " << fn_name << ": "

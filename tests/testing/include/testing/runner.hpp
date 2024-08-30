@@ -7,30 +7,30 @@
 #include <string_view>
 #include <vector>
 
-#define TEST(fn)                                                                                   \
-    namespace testing::namespace_##fn {                                                            \
-        class Test##fn : public TestCase {                                                         \
+#define TEST(test_case_name)                                                                       \
+    namespace testing::namespace_##test_case_name {                                                \
+        class Test##test_case_name : public TestCase {                                             \
         public:                                                                                    \
-            Test##fn() {                                                                           \
-                GetRunner().AddTest(this);                                                         \
-            }                                                                                      \
-                                                                                                   \
             std::string_view Name() const noexcept override {                                      \
-                return #fn;                                                                        \
+                return #test_case_name;                                                            \
             }                                                                                      \
                                                                                                    \
-            virtual void Run() const override;                                                     \
+            void Run() const override;                                                             \
         };                                                                                         \
                                                                                                    \
-        inline const Test##fn singleton_test_##fn{};                                               \
-    }                                                                                              \
+        inline const Test##test_case_name singleton_test_##test_case_name{};                       \
+    } /* namespace testing::namespace_##test_case_name */                                          \
                                                                                                    \
-    void testing::namespace_##fn::Test##fn::Run() const // expected { /* test code */ }
+    inline void testing::namespace_##test_case_name::Test##test_case_name::Run() const // {
+    //     /* test case code */
+    // }
 
 namespace testing {
 
 class TestCase {
 public:
+    TestCase();
+
     virtual ~TestCase() = default;
 
     virtual std::string_view Name() const noexcept = 0;
@@ -43,7 +43,7 @@ class Runner {
 
 public: // Runner
 
-    template <typename ExecutionPolicy>
+    template <typename ExecutionPolicy = decltype(std::execution::seq)>
     void RunAllTests(const ExecutionPolicy& policy = std::execution::seq) const {
         std::for_each(policy, test_cases_.begin(), test_cases_.end(), [](TestCase* test) {
             test->Run();
@@ -58,7 +58,15 @@ public: // Modifier
     }
 };
 
-Runner& GetRunner() noexcept;
+inline Runner singleton_runner;
+
+inline Runner& GetRunner() noexcept {
+    return singleton_runner;
+}
+
+inline TestCase::TestCase() {
+    GetRunner().AddTest(this);
+}
 
 } // namespace testing
 

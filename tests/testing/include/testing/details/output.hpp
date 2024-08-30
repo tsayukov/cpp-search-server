@@ -1,5 +1,5 @@
-#ifndef SEARCH_SERVER_TESTING_OUTPUT_HPP_
-#define SEARCH_SERVER_TESTING_OUTPUT_HPP_
+#ifndef SEARCH_SERVER_TESTING_DETAILS_OUTPUT_HPP_
+#define SEARCH_SERVER_TESTING_DETAILS_OUTPUT_HPP_
 
 #include <iostream>
 #include <map>
@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace testing {
+namespace testing::details {
 
 template <typename C>
 std::ostream& PrintContainer(std::ostream& output, const C& container, std::string_view sep = ", ");
@@ -63,6 +63,6 @@ std::ostream& PrintContainer(std::ostream& output, const C& container, std::stri
     return output;
 }
 
-} // namespace testing
+} // namespace testing::details
 
-#endif // SEARCH_SERVER_TESTING_OUTPUT_HPP_
+#endif // SEARCH_SERVER_TESTING_DETAILS_OUTPUT_HPP_

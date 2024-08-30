@@ -1,9 +1,10 @@
-#include "search_server/search_server.hpp"
+#include <search_server/search_server.hpp>
 
 #include <testing/testing.hpp>
 
 #include <stdexcept>
 
+using namespace search_server;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 

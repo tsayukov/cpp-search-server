@@ -195,7 +195,7 @@ private: // Search
     std::vector<Document> PrepareResult(const std::map<int, double>& document_to_relevance) const;
 };
 
-void RemoveDuplicates(SearchServer& server);
+void RemoveDuplicates(SearchServer& server, std::vector<int>* removed_ids = nullptr);
 
 } // namespace search_server
 

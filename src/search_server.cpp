@@ -135,12 +135,14 @@ std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
             });
 }
 
-[[nodiscard]] std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
+[[nodiscard]]
+std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
     return FindTopDocuments(raw_query, DocumentStatus::kActual);
 }
 
-[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
-        std::string_view raw_query, int document_id) const {
+[[nodiscard]]
+SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(std::string_view raw_query,
+                                                                    int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
 
@@ -165,12 +167,14 @@ std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
     return make_tuple(std::move(matched_words), document_data.status);
 }
 
-[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
+[[nodiscard]]
+SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
         const std::execution::sequenced_policy&, std::string_view raw_query, int document_id) const {
     return MatchDocument(raw_query, document_id);
 }
 
-[[nodiscard]] SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
+[[nodiscard]]
+SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
         const std::execution::parallel_policy&, std::string_view raw_query, int document_id) const {
     CheckDocumentIdIsNotNegative(document_id);
     CheckDocumentIdExists(document_id);
@@ -199,12 +203,13 @@ std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
             is_that_document_has_word);
 
     matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
-    RemoveDuplicateWords(std::execution::par, matched_words);
+    details::RemoveDuplicateWords(std::execution::par, matched_words);
 
     return make_tuple(std::move(matched_words), document_data.status);
 }
 
-[[nodiscard]] std::vector<Document> SearchServer::PrepareResult(
+[[nodiscard]]
+std::vector<Document> SearchServer::PrepareResult(
         const std::map<int, double>& document_to_relevance) const {
     std::vector<Document> result;
     result.reserve(document_to_relevance.size());
@@ -243,13 +248,15 @@ void SearchServer::CheckDocumentIdExists(int document_id) const {
     }
 }
 
-[[nodiscard]] bool SearchServer::IsStopWord(std::string_view word) const {
+[[nodiscard]]
+bool SearchServer::IsStopWord(std::string_view word) const {
     return stop_words_.count(word) > 0;
 }
 
 // Metric computation
 
-[[nodiscard]] int SearchServer::ComputeAverageRating(const std::vector<int>& ratings) {
+[[nodiscard]]
+int SearchServer::ComputeAverageRating(const std::vector<int>& ratings) {
     if (ratings.empty()) {
         return 0;
     }
@@ -257,7 +264,8 @@ void SearchServer::CheckDocumentIdExists(int document_id) const {
     return rating_sum / static_cast<int>(ratings.size());
 }
 
-[[nodiscard]] double SearchServer::ComputeInverseDocumentFrequency(std::size_t docs_with_the_word) const {
+[[nodiscard]]
+double SearchServer::ComputeInverseDocumentFrequency(std::size_t docs_with_the_word) const {
     return std::log(GetDocumentCount() / static_cast<double>(docs_with_the_word));
 }
 
@@ -275,7 +283,8 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
     return result;
 }
 
-[[nodiscard]] SearchServer::QueryWord SearchServer::ParseQueryWord(std::string_view word) const {
+[[nodiscard]]
+SearchServer::QueryWord SearchServer::ParseQueryWord(std::string_view word) const {
     bool is_minus = (word[0] == '-');
     if (is_minus) {
         if (word.size() == 1 || word[1] == '-') {
@@ -288,7 +297,7 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
 
 // Modifier
 
-void RemoveDuplicates(SearchServer &server) {
+void RemoveDuplicates(SearchServer &server, std::vector<int>* removed_ids) {
     using namespace std::string_literals;
 
     std::set<int> ids_to_remove;
@@ -308,8 +317,10 @@ void RemoveDuplicates(SearchServer &server) {
 
     for (const auto& id : ids_to_remove) {
         server.RemoveDocument(id);
-        // TODO: remove output, return the vector of ids instead?
-        std::cout << "Found duplicate document id "s << id << "\n"s;
+    }
+
+    if (removed_ids != nullptr) {
+        removed_ids->assign(ids_to_remove.begin(), ids_to_remove.end());
     }
 }
 

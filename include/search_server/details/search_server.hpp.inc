@@ -42,8 +42,8 @@ SearchServer::Query SearchServer::ParseQuery(const ExecutionPolicy& policy,
         return query;
     }
 
-    RemoveDuplicateWords(policy, query.plus_words);
-    RemoveDuplicateWords(policy, query.minus_words);
+    details::RemoveDuplicateWords(policy, query.plus_words);
+    details::RemoveDuplicateWords(policy, query.minus_words);
 
     return query;
 }

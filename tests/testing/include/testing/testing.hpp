@@ -1,7 +1,7 @@
 #ifndef SEARCH_SERVER_TESTING_TESTING_HPP_
 #define SEARCH_SERVER_TESTING_TESTING_HPP_
 
-#include <testing/details/assertions.hpp>
-#include <testing/details/runner.hpp>
+#include <testing/assertions.hpp>
+#include <testing/runner.hpp>
 
 #endif // SEARCH_SERVER_TESTING_TESTING_HPP_
