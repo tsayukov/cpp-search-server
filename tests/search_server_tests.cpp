@@ -1,21 +1,21 @@
-#include "unit_test_tools.hpp"
 #include "search_server/search_server.hpp"
 
-namespace unit_tests {
+#include <testing/testing.hpp>
 
-using namespace unit_test_tools;
+#include <stdexcept>
+
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 inline constexpr double ERROR_MARGIN = 1e-6;
 
-void TestConstructors() {
+TEST(Constructors) {
     ASSERT_THROW(SearchServer("in \x12the"sv), std::invalid_argument);
     ASSERT_THROW(SearchServer(std::vector<std::string>{"in"s, "\x12the"s}), std::invalid_argument);
     ASSERT_THROW(SearchServer(std::vector<std::string_view>{"in"sv, "\x12the"sv}), std::invalid_argument);
 }
 
-void TestRangeBasedForLoop() {
+TEST(RangeBasedForLoop) {
     {
         const SearchServer empty_server(""sv);
         std::vector<int> res;
@@ -42,7 +42,7 @@ void TestRangeBasedForLoop() {
     }
 }
 
-void TestAddDocument() {
+TEST(AddDocument) {
     const int doc_id = 42;
     const auto content = "cat in the city"sv;
     const std::vector<int> ratings = {1, 2, 3};
@@ -64,7 +64,7 @@ void TestAddDocument() {
     }
 }
 
-void TestRemoveDocument() {
+TEST(RemoveDocument) {
     SearchServer server("and in with"sv);
     {
         server.RemoveDocument(1);
@@ -94,7 +94,7 @@ void TestRemoveDocument() {
     }
 }
 
-void TestGetWordFrequencies() {
+TEST(GetWordFrequencies) {
     SearchServer server("and in with"sv);
     {
         ASSERT(server.GetWordFrequencies(1).empty());
@@ -115,7 +115,7 @@ void TestGetWordFrequencies() {
     }
 }
 
-void TestExcludeStopWordsFromAddedDocumentContent() {
+TEST(ExcludeStopWordsFromAddedDocumentContent) {
     const int doc_id = 42;
     const auto content = "cat in the city"sv;
     const std::vector<int> ratings = {1, 2, 3};
@@ -127,7 +127,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
     }
 }
 
-void TestExcludeDocumentsWithMinusWords() {
+TEST(ExcludeDocumentsWithMinusWords) {
     const int doc_id = 42;
     const auto content = "cat in the city"sv;
     const std::vector<int> ratings = {1, 2, 3};
@@ -150,7 +150,7 @@ void TestExcludeDocumentsWithMinusWords() {
     }
 }
 
-void TestMatchingDocuments() {
+TEST(MatchingDocuments) {
     const int doc_id = 42;
     const auto content = "cats in the city of cats"sv;
     const std::vector<int> ratings = {1, 2, 3};
@@ -173,7 +173,7 @@ void TestMatchingDocuments() {
     }
 }
 
-void TestSortingDocumentsByRelevance() {
+TEST(SortingDocumentsByRelevance) {
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server(""sv);
     server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::kActual, ratings);
@@ -194,7 +194,7 @@ void TestSortingDocumentsByRelevance() {
     ASSERT_EQUAL(result, answer);
 }
 
-void TestDocumentRating() {
+TEST(DocumentRating) {
     SearchServer server(""sv);
     server.AddDocument(5, "nobody lives in the house"sv, DocumentStatus::kActual, {});
     server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, {5});
@@ -214,7 +214,7 @@ void TestDocumentRating() {
     }
 }
 
-void TestFindTopDocumentsWithPredicate() {
+TEST(FindTopDocumentsWithPredicate) {
     SearchServer server(""sv);
     server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, { 0 });
     server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, { 5 });
@@ -240,7 +240,7 @@ void TestFindTopDocumentsWithPredicate() {
     }
 }
 
-void TestFindTopDocumentsWithSpecifiedStatus() {
+TEST(FindTopDocumentsWithSpecifiedStatus) {
     SearchServer server(""sv);
     server.AddDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, { 0 });
     server.AddDocument(2, "cat lives in the house"sv, DocumentStatus::kBanned, { 5 });
@@ -264,7 +264,7 @@ void TestFindTopDocumentsWithSpecifiedStatus() {
     }
 }
 
-void TestCorrectnessRelevance() {
+TEST(CorrectnessRelevance) {
     const std::vector<int> ratings = {1, 2, 3};
     SearchServer server("is are was a an in the with near at"sv);
     server.AddDocument(0, "a colorful parrot with green wings and red tail is lost"sv, DocumentStatus::kActual, ratings);
@@ -279,7 +279,7 @@ void TestCorrectnessRelevance() {
     }
 }
 
-void TestRemoveDuplicates() {
+TEST(RemoveDuplicates) {
     SearchServer server("and in with"sv);
     {
         ASSERT_EQUAL(server.GetDocumentCount(), 0);
@@ -313,26 +313,4 @@ void TestRemoveDuplicates() {
         const std::vector<int> answer = {0, 1};
         ASSERT_EQUAL(res, answer);
     }
-}
-
-} // namespace unit_tests
-
-void RunAllTests() {
-    using namespace unit_tests;
-
-    RUN_TEST(TestConstructors);
-    RUN_TEST(TestRangeBasedForLoop);
-    RUN_TEST(TestAddDocument);
-    RUN_TEST(TestRemoveDocument);
-    RUN_TEST(TestGetWordFrequencies);
-    RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
-    RUN_TEST(TestExcludeDocumentsWithMinusWords);
-    RUN_TEST(TestMatchingDocuments);
-    RUN_TEST(TestSortingDocumentsByRelevance);
-    RUN_TEST(TestDocumentRating);
-    RUN_TEST(TestFindTopDocumentsWithPredicate);
-    RUN_TEST(TestFindTopDocumentsWithSpecifiedStatus);
-    RUN_TEST(TestCorrectnessRelevance);
-    RUN_TEST(TestRemoveDuplicates);
-    RUN_TEST(TestPaginator);
 }
