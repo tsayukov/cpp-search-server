@@ -2,6 +2,9 @@
 #define SEARCH_SERVER_TESTING_TESTING_HPP_
 
 #include <testing/assertions.hpp>
-#include <testing/runner.hpp>
+
+#include <runner/runner.hpp>
+
+#define TEST(...) RUN(__VA_ARGS__)
 
 #endif // SEARCH_SERVER_TESTING_TESTING_HPP_
