@@ -1,4 +1,4 @@
-#ifndef SEARCH_SERVER_DETAILS_SEARCH_SERVER_HPP_INC_
+#ifndef SEARCH_SERVER_DETAILS_SEARCH_SERVER_INL_HPP_
     #error "`search_server.hpp.inc` cannot be included outside of `search_server.hpp`"
 #endif
 

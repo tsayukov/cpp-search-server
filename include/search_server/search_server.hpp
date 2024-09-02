@@ -199,8 +199,8 @@ void RemoveDuplicates(SearchServer& server, std::vector<int>* removed_ids = null
 
 } // namespace search_server
 
-#define SEARCH_SERVER_DETAILS_SEARCH_SERVER_HPP_INC_
-#include <search_server/details/search_server.hpp.inc>
-#undef SEARCH_SERVER_DETAILS_SEARCH_SERVER_HPP_INC_
+#define SEARCH_SERVER_DETAILS_SEARCH_SERVER_INL_HPP_
+#include <search_server/details/search_server-inl.hpp>
+#undef SEARCH_SERVER_DETAILS_SEARCH_SERVER_INL_HPP_
 
 #endif // SEARCH_SERVER_SEARCH_SERVER_HPP_
