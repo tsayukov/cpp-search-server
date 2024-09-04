@@ -5,11 +5,15 @@ add_subdirectory(testing)
 add_subdirectory(testing_main)
 
 add_project_executable(search_server_tests)
-target_sources(search_server_search_server_tests
+project_target_compile_options(search_server_tests
+  PRIVATE
+    ${CXX_OPTIONS}
+)
+project_target_sources(search_server_tests
   PRIVATE
     search_server_tests.cpp
 )
-target_link_libraries(search_server_search_server_tests
+project_target_link_libraries(search_server_tests
   PRIVATE
     search_server::search_server
     search_server::testing_main

@@ -3,16 +3,19 @@ cxx_standard_guard()
 
 
 add_project_library(benchmarking)
-target_link_libraries(search_server_benchmarking
+project_target_link_libraries(benchmarking
   PUBLIC
     search_server::cxx_standard
 )
-target_include_directories(search_server_benchmarking
-  ${WARNING_GUARD}
+project_target_compile_options(benchmarking
+  PRIVATE
+    ${CXX_OPTIONS}
+)
+project_target_include_directories(benchmarking
   PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
-target_sources(search_server_benchmarking
+project_target_sources(benchmarking
   PRIVATE
     log_duration.cpp
 )

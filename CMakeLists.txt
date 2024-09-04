@@ -24,12 +24,15 @@ disable_cxx_extensions()
 include_project_module(Externals)
 
 add_project_library(search_server)
-target_link_libraries(search_server_search_server
+project_target_link_libraries(search_server
   PUBLIC
     search_server::cxx_standard
 )
-target_include_directories(search_server_search_server
-  ${WARNING_GUARD}
+project_target_compile_options(search_server
+  PRIVATE
+    ${CXX_OPTIONS}
+)
+project_target_include_directories(search_server
   PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 )
