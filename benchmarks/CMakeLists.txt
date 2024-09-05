@@ -4,7 +4,7 @@ no_in_source_builds_guard()
 add_subdirectory(benchmarking)
 add_subdirectory(benchmarking_main)
 
-add_project_executable(search_server_benchmarks)
+add_project_executable(search_server_benchmarks EXCLUDE_FROM_INSTALLATION)
 project_target_compile_options(search_server_benchmarks
   PRIVATE
     ${CXX_OPTIONS}

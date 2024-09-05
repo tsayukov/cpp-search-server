@@ -1,7 +1,7 @@
 no_in_source_builds_guard()
 
 
-add_project_library(testing INTERFACE)
+add_project_library(testing INTERFACE EXCLUDE_FROM_INSTALLATION)
 project_target_link_libraries(testing
   INTERFACE
     search_server::runner

@@ -4,7 +4,7 @@ no_in_source_builds_guard()
 add_subdirectory(testing)
 add_subdirectory(testing_main)
 
-add_project_executable(search_server_tests)
+add_project_executable(search_server_tests EXCLUDE_FROM_INSTALLATION)
 project_target_compile_options(search_server_tests
   PRIVATE
     ${CXX_OPTIONS}

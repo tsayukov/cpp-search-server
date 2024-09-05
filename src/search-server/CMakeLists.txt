@@ -1,7 +1,7 @@
 no_in_source_builds_guard()
 
 
-target_sources(search_server_search_server
+project_target_sources(search_server
   PRIVATE
     document.cpp
     process_queries.cpp

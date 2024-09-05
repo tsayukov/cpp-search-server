@@ -43,5 +43,6 @@ include_project_module(DeveloperMode)
 
 if (ENABLE_INSTALL)
   install_project_cmake_configs(COMPATIBILITY "SameMajorVersion" ARCH_INDEPENDENT)
-  # TODO: add other install rules
+  install_project_headers()
+  install_project_targets()
 endif(ENABLE_INSTALL)

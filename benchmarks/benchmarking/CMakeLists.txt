@@ -2,7 +2,7 @@ no_in_source_builds_guard()
 cxx_standard_guard()
 
 
-add_project_library(benchmarking)
+add_project_library(benchmarking EXCLUDE_FROM_INSTALLATION)
 project_target_link_libraries(benchmarking
   PUBLIC
     search_server::cxx_standard
