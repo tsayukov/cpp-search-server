@@ -1,0 +1,398 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug-build",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-build",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "ninja-generator",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
+      "name": "unix-generator",
+      "hidden": true,
+      "generator": "Unix Makefiles"
+    },
+    {
+      "name": "vs-generator",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022"
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "cxx-std-11",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "11"
+      }
+    },
+    {
+      "name": "cxx-std-14",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "14"
+      }
+    },
+    {
+      "name": "cxx-std-17",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "17"
+      }
+    },
+    {
+      "name": "cxx-std-20",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20"
+      }
+    },
+    {
+      "name": "cxx-std-23",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23"
+      }
+    },
+    {
+      "name": "cxx-std-26",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "26"
+      }
+    },
+    {
+      "name": "cmake-pedantic",
+      "hidden": true,
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true,
+        "unusedCli": true,
+        "systemVars": false
+      },
+      "errors": {
+        "dev": true,
+        "deprecated": true
+      }
+    },
+    {
+      "name": "dev-mode",
+      "hidden": true,
+      "inherits": "cmake-pedantic",
+      "cacheVariables": {
+        "SEARCH_SERVER_ENABLE_DEVELOPER_MODE": "ON"
+      }
+    },
+    {
+      "name": "ninja-clang",
+      "hidden": true,
+      "inherits": ["ninja-generator", "clang"]
+    },
+    {
+      "name": "debug",
+      "inherits": ["ninja-clang", "debug-build"],
+      "displayName": "Default debug configuration and generation",
+      "description": "Configure and generate steps for debug build using Ninja and Clang"
+    },
+    {
+      "name": "release",
+      "inherits": ["ninja-clang", "release-build"],
+      "displayName": "Default release configuration and generation",
+      "description": "Configure and generate steps for release build using Ninja and Clang"
+    },
+    {
+      "name": "debug-dev",
+      "inherits": ["debug", "dev-mode"],
+      "displayName": "Developer debug configuration and generation",
+      "description": "Configure and generate steps for debug build using Ninja and Clang in the developer mode",
+      "binaryDir": "${sourceDir}/build/debug-dev"
+    },
+    {
+      "name": "release-dev",
+      "inherits": ["release", "dev-mode"],
+      "displayName": "Developer release configuration and generation",
+      "description": "Configure and generate steps for release build using Ninja and Clang in the developer mode",
+      "binaryDir": "${sourceDir}/build/release-dev"
+    },
+    {
+      "name": "debug-dev-11",
+      "inherits": ["debug-dev", "cxx-std-11"],
+      "binaryDir": "${sourceDir}/build/debug-dev-11"
+    },
+    {
+      "name": "debug-dev-14",
+      "inherits": ["debug-dev", "cxx-std-14"],
+      "binaryDir": "${sourceDir}/build/debug-dev-14"
+    },
+    {
+      "name": "debug-dev-17",
+      "inherits": ["debug-dev", "cxx-std-17"],
+      "binaryDir": "${sourceDir}/build/debug-dev-17"
+    },
+    {
+      "name": "debug-dev-20",
+      "inherits": ["debug-dev", "cxx-std-20"],
+      "binaryDir": "${sourceDir}/build/debug-dev-20"
+    },
+    {
+      "name": "debug-dev-23",
+      "inherits": ["debug-dev", "cxx-std-23"],
+      "binaryDir": "${sourceDir}/build/debug-dev-23"
+    },
+    {
+      "name": "debug-dev-26",
+      "inherits": ["debug-dev", "cxx-std-26"],
+      "binaryDir": "${sourceDir}/build/debug-dev-26"
+    },
+    {
+      "name": "release-dev-11",
+      "inherits": ["release-dev", "cxx-std-11"],
+      "binaryDir": "${sourceDir}/build/release-dev-11"
+    },
+    {
+      "name": "release-dev-14",
+      "inherits": ["release-dev", "cxx-std-14"],
+      "binaryDir": "${sourceDir}/build/release-dev-14"
+    },
+    {
+      "name": "release-dev-17",
+      "inherits": ["release-dev", "cxx-std-17"],
+      "binaryDir": "${sourceDir}/build/release-dev-17"
+    },
+    {
+      "name": "release-dev-20",
+      "inherits": ["release-dev", "cxx-std-20"],
+      "binaryDir": "${sourceDir}/build/release-dev-20"
+    },
+    {
+      "name": "release-dev-23",
+      "inherits": ["release-dev", "cxx-std-23"],
+      "binaryDir": "${sourceDir}/build/release-dev-23"
+    },
+    {
+      "name": "release-dev-26",
+      "inherits": ["release-dev", "cxx-std-26"],
+      "binaryDir": "${sourceDir}/build/release-dev-26"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "debug-dev",
+      "configurePreset": "debug-dev"
+    },
+    {
+      "name": "debug-dev-11",
+      "configurePreset": "debug-dev-11"
+    },
+    {
+      "name": "debug-dev-14",
+      "configurePreset": "debug-dev-14"
+    },
+    {
+      "name": "debug-dev-17",
+      "configurePreset": "debug-dev-17"
+    },
+    {
+      "name": "debug-dev-20",
+      "configurePreset": "debug-dev-20"
+    },
+    {
+      "name": "debug-dev-23",
+      "configurePreset": "debug-dev-23"
+    },
+    {
+      "name": "debug-dev-26",
+      "configurePreset": "debug-dev-26"
+    },
+    {
+      "name": "release-dev",
+      "configurePreset": "release-dev"
+    },
+    {
+      "name": "release-dev-11",
+      "configurePreset": "release-dev-11"
+    },
+    {
+      "name": "release-dev-14",
+      "configurePreset": "release-dev-14"
+    },
+    {
+      "name": "release-dev-17",
+      "configurePreset": "release-dev-17"
+    },
+    {
+      "name": "release-dev-20",
+      "configurePreset": "release-dev-20"
+    },
+    {
+      "name": "release-dev-23",
+      "configurePreset": "release-dev-23"
+    },
+    {
+      "name": "release-dev-26",
+      "configurePreset": "release-dev-26"
+    },
+    {
+      "name": "docs",
+      "inherits": "release-dev",
+      "displayName": "Build the documentation",
+      "targets": "search_server_docs"
+    },
+    {
+      "name": "install",
+      "inherits": "release",
+      "displayName": "Install the project",
+      "targets": "install"
+    },
+    {
+      "name": "install-configs",
+      "inherits": "release",
+      "displayName": "Install CMake configuration files",
+      "targets": "install_search_server_configs"
+    },
+    {
+      "name": "install-headers",
+      "inherits": "release",
+      "displayName": "Install headers",
+      "targets": "install_search_server_headers"
+    },
+    {
+      "name": "install-runtime",
+      "inherits": "release",
+      "displayName": "Install the runtime component",
+      "targets": "install_search_server_runtime"
+    },
+    {
+      "name": "install-development",
+      "inherits": "release",
+      "displayName": "Install the development component",
+      "targets": "install_search_server_development"
+    },
+    {
+      "name": "install-docs",
+      "inherits": "release",
+      "displayName": "Install the documentation",
+      "targets": "install_search_server_docs"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "common",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-dev",
+      "inherits": "common",
+      "configurePreset": "debug-dev"
+    },
+    {
+      "name": "debug-dev-11",
+      "inherits": "common",
+      "configurePreset": "debug-dev-11"
+    },
+    {
+      "name": "debug-dev-14",
+      "inherits": "common",
+      "configurePreset": "debug-dev-14"
+    },
+    {
+      "name": "debug-dev-17",
+      "inherits": "common",
+      "configurePreset": "debug-dev-17"
+    },
+    {
+      "name": "debug-dev-20",
+      "inherits": "common",
+      "configurePreset": "debug-dev-20"
+    },
+    {
+      "name": "debug-dev-23",
+      "inherits": "common",
+      "configurePreset": "debug-dev-23"
+    },
+    {
+      "name": "debug-dev-26",
+      "inherits": "common",
+      "configurePreset": "debug-dev-26"
+    },
+    {
+      "name": "release-dev",
+      "inherits": "common",
+      "configurePreset": "release-dev"
+    },
+    {
+      "name": "release-dev-11",
+      "inherits": "common",
+      "configurePreset": "release-dev-11"
+    },
+    {
+      "name": "release-dev-14",
+      "inherits": "common",
+      "configurePreset": "release-dev-14"
+    },
+    {
+      "name": "release-dev-17",
+      "inherits": "common",
+      "configurePreset": "release-dev-17"
+    },
+    {
+      "name": "release-dev-20",
+      "inherits": "common",
+      "configurePreset": "release-dev-20"
+    },
+    {
+      "name": "release-dev-23",
+      "inherits": "common",
+      "configurePreset": "release-dev-23"
+    },
+    {
+      "name": "release-dev-26",
+      "inherits": "common",
+      "configurePreset": "release-dev-26"
+    }
+  ]
+}
