@@ -23,6 +23,20 @@
       }
     },
     {
+      "name": "static-library",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "FALSE"
+      }
+    },
+    {
+      "name": "shared-library",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "TRUE"
+      }
+    },
+    {
       "name": "ninja-generator",
       "hidden": true,
       "generator": "Ninja"
@@ -132,6 +146,18 @@
       "inherits": ["ninja-clang", "release-build"],
       "displayName": "Default release configuration and generation",
       "description": "Configure and generate steps for release build using Ninja and Clang"
+    },
+    {
+      "name": "release-static-library",
+      "inherits": ["release", "static-library"],
+      "displayName": "Release configuration and generation of the static library",
+      "description": "Configure and generate steps for release build of the static library using Ninja and Clang"
+    },
+    {
+      "name": "release-shared-library",
+      "inherits": ["release", "shared-library"],
+      "displayName": "Release configuration and generation of the shared library",
+      "description": "Configure and generate steps for release build of the shared library using Ninja and Clang"
     },
     {
       "name": "debug-dev",
@@ -283,6 +309,18 @@
       "name": "install",
       "inherits": "release",
       "displayName": "Install the project",
+      "targets": "install"
+    },
+    {
+      "name": "install-static-library",
+      "inherits": "release-static-library",
+      "displayName": "Install the project as a static library",
+      "targets": "install"
+    },
+    {
+      "name": "install-shared-library",
+      "inherits": "release-shared-library",
+      "displayName": "Install the project as a shared library",
       "targets": "install"
     },
     {
