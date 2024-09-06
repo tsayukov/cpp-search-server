@@ -313,13 +313,13 @@
     },
     {
       "name": "install-static-library",
-      "inherits": "release-static-library",
+      "configurePreset": "release-static-library",
       "displayName": "Install the project as a static library",
       "targets": "install"
     },
     {
       "name": "install-shared-library",
-      "inherits": "release-shared-library",
+      "configurePreset": "release-shared-library",
       "displayName": "Install the project as a shared library",
       "targets": "install"
     },
