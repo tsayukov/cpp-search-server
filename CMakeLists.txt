@@ -16,7 +16,7 @@ project(search-server
 )
 
 include("${PROJECT_SOURCE_DIR}/cmake/Common.cmake")
-no_in_source_builds_guard()
+no_in_source_builds_guard(RECURSIVE include)
 
 use_cxx_standard_at_least(17)
 disable_cxx_extensions()

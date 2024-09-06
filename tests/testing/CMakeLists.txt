@@ -1,4 +1,4 @@
-no_in_source_builds_guard()
+no_in_source_builds_guard(RECURSIVE include)
 
 
 add_project_library(testing INTERFACE EXCLUDE_FROM_INSTALLATION)

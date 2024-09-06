@@ -1,4 +1,4 @@
-no_in_source_builds_guard()
+no_in_source_builds_guard(RECURSIVE include)
 cxx_standard_guard()
 
 
