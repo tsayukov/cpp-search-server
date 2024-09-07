@@ -18,6 +18,10 @@ project_target_link_libraries(search_server_tests
     search_server::search_server
     search_server::testing_main
 )
+add_memory_check(search_server_tests)
+
 add_test(NAME search_server_tests
   COMMAND search_server_search_server_tests --parallel
 )
+
+add_unity_memory_check()
