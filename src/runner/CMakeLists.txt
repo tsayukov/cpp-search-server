@@ -1,5 +1,4 @@
 no_in_source_builds_guard(RECURSIVE include)
-cxx_standard_guard()
 
 
 add_project_library(runner INTERFACE EXCLUDE_FROM_INSTALLATION)
