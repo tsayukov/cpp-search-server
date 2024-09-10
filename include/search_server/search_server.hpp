@@ -5,6 +5,8 @@
 #include "search_server/details/concurrent_map.hpp"
 #include "search_server/details/string_processing.hpp"
 
+#include <search_server/search_server_export.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <execution>
@@ -19,7 +21,7 @@
 
 namespace search_server {
 
-class SearchServer {
+class SEARCH_SERVER_EXPORT SearchServer {
     struct DocumentData {
         std::map<std::string_view, double> word_frequencies;
         int rating;
@@ -195,6 +197,7 @@ private: // Search
     std::vector<Document> PrepareResult(const std::map<int, double>& document_to_relevance) const;
 };
 
+SEARCH_SERVER_EXPORT
 void RemoveDuplicates(SearchServer& server, std::vector<int>* removed_ids = nullptr);
 
 } // namespace search_server

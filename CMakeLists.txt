@@ -15,8 +15,8 @@ project(search-server
   LANGUAGES CXX
 )
 
-include("${PROJECT_SOURCE_DIR}/cmake/Common.cmake")
-no_in_source_builds_guard(RECURSIVE include)
+include(cmake/Common.cmake)
+no_in_source_builds_guard(RECURSIVE benchmarks examples include src tests)
 
 use_cxx_standard_at_least(17)
 disable_cxx_extensions()
@@ -36,13 +36,17 @@ project_target_include_directories(search_server
   PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 )
+generate_project_export_header(search_server
+  BASE_INCLUDE_DIRECTORY "include"
+  EXPORT_FILE_NAME "search_server/search_server_export.hpp"
+)
 
 add_subdirectory(src)
 
 include_project_module(DeveloperMode)
 
 if (ENABLE_INSTALL)
-  install_project_cmake_configs(COMPATIBILITY "SameMajorVersion" ARCH_INDEPENDENT)
+  install_project_cmake_configs(COMPATIBILITY "SameMajorVersion")
   install_project_headers()
   install_project_targets()
 endif(ENABLE_INSTALL)

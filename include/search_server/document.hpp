@@ -4,12 +4,14 @@
 #ifndef SEARCH_SERVER_DOCUMENT_HPP_
 #define SEARCH_SERVER_DOCUMENT_HPP_
 
+#include <search_server/search_server_export.hpp>
+
 #include <ostream>
 
 namespace search_server {
 
 /// Document's current status
-enum class DocumentStatus {
+enum class SEARCH_SERVER_EXPORT DocumentStatus {
     kActual,
     kIrrelevant,
     kBanned,
@@ -20,7 +22,7 @@ enum class DocumentStatus {
 ///
 /// Each document has an \c id identifier, \c relevance, and \c rating that is
 /// the arithmetic mean of all its ratings.
-struct Document {
+struct SEARCH_SERVER_EXPORT Document {
     int id;
     int rating;
     double relevance;
@@ -28,6 +30,7 @@ struct Document {
     Document(int id = 0, double relevance = 0.0, int rating = 0) noexcept;
 };
 
+SEARCH_SERVER_EXPORT
 std::ostream& operator<<(std::ostream& output, const Document& document);
 
 } // namespace search_server
