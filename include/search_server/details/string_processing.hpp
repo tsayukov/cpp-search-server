@@ -9,11 +9,19 @@
 
 namespace search_server::details {
 
+template <typename Container, typename = void>
+inline constexpr bool kContainsStringViewLike = false;
+
 template <typename Container>
-inline constexpr bool kContainsStringViewLike = std::is_convertible_v
-        < typename std::decay_t<Container>::value_type
-        , std::string_view
-        >;
+inline constexpr bool kContainsStringViewLike
+        < Container
+        , std::enable_if_t
+                < std::is_convertible_v
+                        < typename std::decay_t<Container>::value_type
+                        , std::string_view
+                        >
+                >
+        > = true;
 
 [[nodiscard]]
 std::vector<std::string> SplitIntoWords(std::string_view text);
