@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TEST_NAME="use-proxy-shared-library"
+TEST_NAME="use-public-shared-library"
 
 GENERATOR="Ninja"
 CXX_COMPILER="clang++"
@@ -18,10 +18,11 @@ TEST_SOURCE_DIR="."
 TEST_BINARY_DIR="${PROJECT_SOURCE_DIR}/build/${TEST_NAME}"
 TEST_INSTALL_DIR="${PROJECT_SOURCE_DIR}/.installed/${TEST_NAME}"
 
-PROXY_LIBRARY_BUILD_TYPE="Release"
-PROXY_LIBRARY_SOURCE_DIR="${TEST_SOURCE_DIR}/proxy-shared-library"
-PROXY_LIBRARY_BINARY_DIR="${PROJECT_SOURCE_DIR}/build/proxy-shared-library"
-PROXY_LIBRARY_INSTALL_DIR="${PROJECT_SOURCE_DIR}/.installed/proxy-shared-library"
+PUBLIC_LIBRARY_NAME="public-shared-library"
+PUBLIC_LIBRARY_BUILD_TYPE="Release"
+PUBLIC_LIBRARY_SOURCE_DIR="${TEST_SOURCE_DIR}/${PUBLIC_LIBRARY_NAME}"
+PUBLIC_LIBRARY_BINARY_DIR="${PROJECT_SOURCE_DIR}/build/${PUBLIC_LIBRARY_NAME}"
+PUBLIC_LIBRARY_INSTALL_DIR="${PROJECT_SOURCE_DIR}/.installed/${PUBLIC_LIBRARY_NAME}"
 
 cat <<EOF
 Run '${TEST_NAME}' test
@@ -30,8 +31,8 @@ EOF
 
     rm -rf "${PROJECT_BINARY_DIR}"
     rm -rf "${PROJECT_INSTALL_DIR}"
-    rm -rf "${PROXY_LIBRARY_BINARY_DIR}"
-    rm -rf "${PROXY_LIBRARY_INSTALL_DIR}"
+    rm -rf "${PUBLIC_LIBRARY_BINARY_DIR}"
+    rm -rf "${PUBLIC_LIBRARY_INSTALL_DIR}"
     rm -rf "${TEST_BINARY_DIR}"
     rm -rf "${TEST_INSTALL_DIR}"
 
@@ -63,32 +64,32 @@ EOF
 cat <<EOF
 
 '${PROJECT_NAME}' (build and install steps) - done
-'proxy-shared-library' (configure and generate steps)
+'${PUBLIC_LIBRARY_NAME}' (configure and generate steps)
 
 EOF
 
     cmake \
         --fresh \
         -G "${GENERATOR}" \
-        -DCMAKE_BUILD_TYPE="${PROXY_LIBRARY_BUILD_TYPE}" \
+        -DCMAKE_BUILD_TYPE="${PUBLIC_LIBRARY_BUILD_TYPE}" \
         -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
         -DCMAKE_PREFIX_PATH="${PROJECT_INSTALL_DIR}" \
-        -DCMAKE_INSTALL_PREFIX="${PROXY_LIBRARY_INSTALL_DIR}" \
-        -S "${PROXY_LIBRARY_SOURCE_DIR}" \
-        -B "${PROXY_LIBRARY_BINARY_DIR}"
+        -DCMAKE_INSTALL_PREFIX="${PUBLIC_LIBRARY_INSTALL_DIR}" \
+        -S "${PUBLIC_LIBRARY_SOURCE_DIR}" \
+        -B "${PUBLIC_LIBRARY_BINARY_DIR}"
 
 cat <<EOF
 
-'proxy-shared-library' (configure and generate steps) - done
-'proxy-shared-library' (build and install steps)
+'${PUBLIC_LIBRARY_NAME}' (configure and generate steps) - done
+'${PUBLIC_LIBRARY_NAME}' (build and install steps)
 
 EOF
 
-    cmake --build "${PROXY_LIBRARY_BINARY_DIR}" --target install
+    cmake --build "${PUBLIC_LIBRARY_BINARY_DIR}" --target install
 
 cat <<EOF
 
-'proxy-shared-library' (build and install steps) - done
+'${PUBLIC_LIBRARY_NAME}' (build and install steps) - done
 '${TEST_NAME}' (configure and generate steps)
 
 EOF
@@ -98,7 +99,7 @@ EOF
         -G "${GENERATOR}" \
         -DCMAKE_BUILD_TYPE="${TEST_BUILD_TYPE}" \
         -DCMAKE_CXX_COMPILER="${CXX_COMPILER}" \
-        -DCMAKE_PREFIX_PATH="${PROXY_LIBRARY_INSTALL_DIR};${PROJECT_INSTALL_DIR}" \
+        -DCMAKE_PREFIX_PATH="${PUBLIC_LIBRARY_INSTALL_DIR};${PROJECT_INSTALL_DIR}" \
         -DCMAKE_INSTALL_PREFIX="${TEST_INSTALL_DIR}" \
         -S "${TEST_SOURCE_DIR}" \
         -B "${TEST_BINARY_DIR}"
@@ -127,8 +128,10 @@ cat <<EOF
 
 EOF
 
-    export LD_LIBRARY_PATH="${PROJECT_INSTALL_DIR}/lib":"${PROXY_LIBRARY_INSTALL_DIR}/lib":${LD_LIBRARY_PATH}
+    PREV_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+    export LD_LIBRARY_PATH="${PROJECT_INSTALL_DIR}/lib":"${PUBLIC_LIBRARY_INSTALL_DIR}/lib":${LD_LIBRARY_PATH}
     "${TEST_INSTALL_DIR}/bin/main"
+    export LD_LIBRARY_PATH=${PREV_LD_LIBRARY_PATH}
 
 cat <<EOF
 

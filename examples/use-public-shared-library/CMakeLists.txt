@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(use-proxy-shared-library CXX)
+project(use-public-shared-library CXX)
 
 find_path(runner_include runner.hpp)
 find_library(runner_library runner)

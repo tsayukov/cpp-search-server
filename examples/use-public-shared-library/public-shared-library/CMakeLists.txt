@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(install-proxy-shared-library CXX)
+project(public-shared-library CXX)
 
 find_package(search_server REQUIRED)
 
