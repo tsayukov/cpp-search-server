@@ -4,7 +4,7 @@
 #include <search_server/document.hpp>
 #include <search_server/search_server.hpp>
 
-#include <search_server/search_server_export.hpp>
+#include <search_server/export.hpp>
 
 #include <vector>
 

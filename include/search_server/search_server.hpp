@@ -5,7 +5,7 @@
 #include "search_server/details/concurrent_map.hpp"
 #include "search_server/details/string_processing.hpp"
 
-#include <search_server/search_server_export.hpp>
+#include <search_server/export.hpp>
 
 #include <algorithm>
 #include <cmath>

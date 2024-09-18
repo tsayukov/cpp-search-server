@@ -4,7 +4,7 @@
 #ifndef SEARCH_SERVER_DOCUMENT_HPP_
 #define SEARCH_SERVER_DOCUMENT_HPP_
 
-#include <search_server/search_server_export.hpp>
+#include <search_server/export.hpp>
 
 #include <ostream>
 

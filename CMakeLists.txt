@@ -38,7 +38,8 @@ project_target_include_directories(search_server
 )
 generate_project_export_header(search_server
   BASE_INCLUDE_DIRECTORY "include"
-  EXPORT_FILE_NAME "search_server/search_server_export.hpp"
+  INCLUDE_GUARD_NAME "SEARCH_SERVER_EXPORT_HPP_"
+  EXPORT_FILE_NAME "search_server/export.hpp"
 )
 
 add_subdirectory(src)
