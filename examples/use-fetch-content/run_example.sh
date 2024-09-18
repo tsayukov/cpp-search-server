@@ -7,7 +7,7 @@ CXX_COMPILER="clang++"
 
 PROJECT_NAME="search_server"
 
-PROJECT_SOURCE_DIR="../.."
+PROJECT_SOURCE_DIR=$(realpath "../..")
 
 TEST_BUILD_TYPE="Release"
 TEST_SOURCE_DIR="."
