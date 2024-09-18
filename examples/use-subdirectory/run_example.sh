@@ -15,13 +15,13 @@ TEST_BINARY_DIR="${PROJECT_SOURCE_DIR}/build/${TEST_NAME}"
 
 cat <<EOF
 Run '${TEST_NAME}' test
-Clean up binary directories
+Clean up binary directory
 EOF
 
     rm -rf "${TEST_BINARY_DIR}"
 
 cat <<EOF
-Clean up binary directories - done
+Clean up binary directory - done
 '${PROJECT_NAME}' (copying to subdirectory)
 EOF
 
