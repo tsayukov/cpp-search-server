@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+
+project(use-private-shared-library_as_proxy CXX)
+
+if (APPLE)
+  set(CMAKE_INSTALL_RPATH "@loader_path")
+elseif (UNIX)
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN")
+endif()
+
+find_path(runner_include runner.hpp REQUIRED)
+find_library(runner_library runner REQUIRED)
+
+add_library(runner SHARED IMPORTED)
+set_target_properties(runner
+  PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${runner_include}"
+    IMPORTED_LOCATION "${runner_library}"
+)
+
+find_package(search_server REQUIRED)
+
+add_executable(main)
+target_link_libraries(main PRIVATE runner search_server::search_server)
+target_sources(main PRIVATE "../src/main.cpp")
+
+include(GNUInstallDirs)
+install(TARGETS main)
