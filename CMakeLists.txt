@@ -41,13 +41,11 @@ fcm_generate_export_header(search_server
   EXPORT_FILE_NAME "search_server/export.hpp"
 )
 
-add_subdirectory(src/search_server)
+add_subdirectory(src)
 
-fcm_get(ENABLE_TESTING)
-fcm_get(ENABLE_BENCHMARKING)
-if (ENABLE_TESTING OR ENABLE_BENCHMARKING)
-  add_subdirectory(src/runner)
-endif()
+add_subdirectory(extras)
+
+fcm_include("DeveloperMode" TEMPLATE)
 
 if (ENABLE_TESTING)
   add_subdirectory(tests)
@@ -56,8 +54,6 @@ endif()
 if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmarks)
 endif()
-
-fcm_include("DeveloperMode" TEMPLATE)
 
 fcm_get(ENABLE_INSTALL)
 if (ENABLE_INSTALL)

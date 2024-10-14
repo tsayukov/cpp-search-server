@@ -1,6 +1,3 @@
-add_subdirectory(benchmarking)
-add_subdirectory(benchmarking_main)
-
 fcm_add_executable(benchmarks EXCLUDE_FROM_INSTALL)
 fcm_target_compile_options(benchmarks
   PRIVATE ${CXX_OPTIONS}

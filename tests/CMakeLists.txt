@@ -1,6 +1,3 @@
-add_subdirectory(testing)
-add_subdirectory(testing_main)
-
 fcm_add_executable(tests EXCLUDE_FROM_INSTALL)
 fcm_target_compile_options(tests
   PRIVATE ${CXX_OPTIONS}
@@ -8,7 +5,7 @@ fcm_target_compile_options(tests
 fcm_target_sources(tests
   PRIVATE search_server_tests.cpp
 )
-fcm_link_libraries(tests
+fcm_target_link_libraries(tests
   PRIVATE
     search_server::search_server
     search_server::testing_main
