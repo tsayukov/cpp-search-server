@@ -8,46 +8,61 @@
 
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(search-server
+project(search_server
   VERSION 0.1.0
   DESCRIPTION "TODO: add description"
   HOMEPAGE_URL "https://github.com/tsayukov/cpp-search-server"
   LANGUAGES CXX
 )
 
-include(cmake/Common.cmake)
-no_in_source_builds_guard(RECURSIVE benchmarks examples include src tests)
-
-use_cxx_standard_at_least(17)
-disable_cxx_extensions()
-
-include_project_module(Externals)
-
-add_project_library(search_server)
-project_target_link_libraries(search_server
-  PUBLIC
-    search_server::cxx_standard
+include(cmake/FcmInit.cmake)
+fcm_no_in_source_builds_guard(
+  RECURSIVE "benchmarks" "examples" "include" "src" "tests"
 )
-project_target_compile_options(search_server
-  PRIVATE
-    ${CXX_OPTIONS}
+
+fcm_use_cxx_standard_at_least(17)
+fcm_disable_cxx_extensions()
+
+fcm_include("Dependencies" TEMPLATE)
+
+fcm_add_library(search_server)
+fcm_target_link_libraries(search_server
+  PUBLIC search_server::cxx_standard
 )
-project_target_include_directories(search_server
-  PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+fcm_target_compile_options(search_server
+  PRIVATE ${CXX_OPTIONS}
 )
-generate_project_export_header(search_server
+fcm_target_include_directories(search_server
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+)
+fcm_generate_export_header(search_server
   BASE_INCLUDE_DIRECTORY "include"
   INCLUDE_GUARD_NAME "SEARCH_SERVER_EXPORT_HPP_"
   EXPORT_FILE_NAME "search_server/export.hpp"
 )
 
-add_subdirectory(src)
+add_subdirectory(src/search_server)
 
-include_project_module(DeveloperMode)
+fcm_get(ENABLE_TESTING)
+fcm_get(ENABLE_BENCHMARKING)
+if (ENABLE_TESTING OR ENABLE_BENCHMARKING)
+  add_subdirectory(src/runner)
+endif()
 
+if (ENABLE_TESTING)
+  add_subdirectory(tests)
+endif()
+
+if (ENABLE_BENCHMARKING)
+  add_subdirectory(benchmarks)
+endif()
+
+fcm_include("DeveloperMode" TEMPLATE)
+
+fcm_get(ENABLE_INSTALL)
 if (ENABLE_INSTALL)
-  install_project_cmake_configs(COMPATIBILITY "SameMajorVersion")
-  install_project_headers()
-  install_project_targets()
+  fcm_install(CONFIGS COMPATIBILITY "SameMajorVersion")
+  fcm_install(HEADERS)
+  fcm_install(EXPORT_HEADERS)
+  fcm_install(TARGETS)
 endif(ENABLE_INSTALL)

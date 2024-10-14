@@ -1,27 +1,22 @@
-no_in_source_builds_guard()
-
-
 add_subdirectory(testing)
 add_subdirectory(testing_main)
 
-add_project_executable(search_server_tests EXCLUDE_FROM_INSTALLATION)
-project_target_compile_options(search_server_tests
-  PRIVATE
-    ${CXX_OPTIONS}
+fcm_add_executable(tests EXCLUDE_FROM_INSTALL)
+fcm_target_compile_options(tests
+  PRIVATE ${CXX_OPTIONS}
 )
-project_target_sources(search_server_tests
-  PRIVATE
-    search_server_tests.cpp
+fcm_target_sources(tests
+  PRIVATE search_server_tests.cpp
 )
-project_target_link_libraries(search_server_tests
+fcm_link_libraries(tests
   PRIVATE
     search_server::search_server
     search_server::testing_main
 )
-add_memory_check(search_server_tests)
+fcm_valgrind_add_memcheck(tests)
 
-add_test(NAME search_server_tests
-  COMMAND search_server_search_server_tests --parallel
+add_test(NAME search_server.tests
+  COMMAND search_server_tests --parallel
 )
 
-add_unity_memory_check()
+fcm_valgrind_add_unity_memcheck()

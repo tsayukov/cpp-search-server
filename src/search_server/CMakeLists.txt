@@ -1,7 +1,4 @@
-no_in_source_builds_guard()
-
-
-project_target_sources(search_server
+fcm_target_sources(search_server
   PRIVATE
     document.cpp
     process_queries.cpp
