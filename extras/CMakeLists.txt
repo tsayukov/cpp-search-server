@@ -1,6 +1,3 @@
-fcm_get(ENABLE_TESTING)
-fcm_get(ENABLE_BENCHMARKING)
-
 if (ENABLE_TESTING OR ENABLE_BENCHMARKING)
   add_subdirectory(runner)
 endif()

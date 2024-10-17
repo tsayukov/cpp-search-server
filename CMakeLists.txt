@@ -24,7 +24,6 @@ fcm_use_cxx_standard_at_least(17)
 fcm_disable_cxx_extensions()
 
 fcm_include("Dependencies" TEMPLATE)
-fcm_include("DeveloperMode" TEMPLATE)
 
 fcm_add_library(search_server)
 fcm_target_link_libraries(search_server
@@ -62,10 +61,16 @@ fcm_clang_format_add(format
     "benchmarks"
 )
 
-fcm_get(ENABLE_INSTALL)
-if (ENABLE_INSTALL)
-  fcm_install(CONFIGS COMPATIBILITY "SameMajorVersion")
-  fcm_install(HEADERS)
-  fcm_install(EXPORT_HEADERS)
-  fcm_install(TARGETS)
-endif(ENABLE_INSTALL)
+fcm_doxygen_add_docs(docs
+  FORMAT html
+  INPUTS
+    "include"
+    "README.md"
+)
+
+fcm_enable_if(ENABLE_INSTALL)
+
+fcm_install(CONFIGS COMPATIBILITY "SameMajorVersion")
+fcm_install(HEADERS)
+fcm_install(EXPORT_HEADERS)
+fcm_install(TARGETS)
