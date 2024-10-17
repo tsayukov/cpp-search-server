@@ -24,6 +24,7 @@ fcm_use_cxx_standard_at_least(17)
 fcm_disable_cxx_extensions()
 
 fcm_include("Dependencies" TEMPLATE)
+fcm_include("DeveloperMode" TEMPLATE)
 
 fcm_add_library(search_server)
 fcm_target_link_libraries(search_server
@@ -42,10 +43,7 @@ fcm_generate_export_header(search_server
 )
 
 add_subdirectory(src)
-
 add_subdirectory(extras)
-
-fcm_include("DeveloperMode" TEMPLATE)
 
 if (ENABLE_TESTING)
   add_subdirectory(tests)
@@ -54,6 +52,15 @@ endif()
 if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmarks)
 endif()
+
+fcm_clang_format_add(format
+  DIRECTORIES
+    "include"
+    "src"
+    "extras"
+    "tests"
+    "benchmarks"
+)
 
 fcm_get(ENABLE_INSTALL)
 if (ENABLE_INSTALL)

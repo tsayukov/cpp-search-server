@@ -3,7 +3,7 @@
 namespace search_server::details {
 
 [[nodiscard]]
-std::vector<std::string> SplitIntoWords(std::string_view text) {
+std::vector<std::string> splitIntoWords(std::string_view text) {
     std::vector<std::string> words;
     std::string word;
     for (const char c : text) {
@@ -24,7 +24,7 @@ std::vector<std::string> SplitIntoWords(std::string_view text) {
 }
 
 [[nodiscard]]
-std::vector<std::string_view> SplitIntoWordsView(std::string_view text) {
+std::vector<std::string_view> splitIntoWordsView(std::string_view text) {
     using pos_t = std::size_t;
     using count_t = std::size_t;
 

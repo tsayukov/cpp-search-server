@@ -1,0 +1,23 @@
+---
+BasedOnStyle: InheritParentConfig
+IncludeCategories:
+  - Regex: ^".*/.*\.(h|hpp)"
+    Priority: 2
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^".*\.(h|hpp)"
+    Priority: 1
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*/.*\.(h|hpp)>
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*\.(h|hpp)>
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: false

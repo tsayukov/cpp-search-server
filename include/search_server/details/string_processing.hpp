@@ -14,6 +14,7 @@ inline constexpr bool kContainsStringViewLike = false;
 
 template <typename Container>
 inline constexpr bool kContainsStringViewLike
+// clang-format off
         < Container
         , std::enable_if_t
                 < std::is_convertible_v
@@ -22,20 +23,21 @@ inline constexpr bool kContainsStringViewLike
                         >
                 >
         > = true;
+// clang-format on
 
 [[nodiscard]]
-std::vector<std::string> SplitIntoWords(std::string_view text);
+std::vector<std::string> splitIntoWords(std::string_view text);
 
 [[nodiscard]]
-std::vector<std::string_view> SplitIntoWordsView(std::string_view text);
+std::vector<std::string_view> splitIntoWordsView(std::string_view text);
 
 template <typename ExecutionPolicy, typename ContiguousContainer>
-void RemoveDuplicateWords(const ExecutionPolicy& policy, ContiguousContainer& container) {
+void removeDuplicateWords(const ExecutionPolicy& policy, ContiguousContainer& container) {
     static_assert(kContainsStringViewLike<ContiguousContainer>);
 
     std::sort(policy, container.begin(), container.end());
-    auto begin_of_words_to_remove = std::unique(container.begin(), container.end());
-    container.erase(begin_of_words_to_remove, container.end());
+    auto beginOfWordsToRemove = std::unique(container.begin(), container.end());
+    container.erase(beginOfWordsToRemove, container.end());
 }
 
 } // namespace search_server::details

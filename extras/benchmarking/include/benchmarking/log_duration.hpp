@@ -10,24 +10,23 @@
 
 #define UNIQUE_VAR_NAME_PROFILE PROFILE_CONCAT(profileGuard, __LINE__)
 
-#define LOG_DURATION(op_name) \
-    benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(op_name)
+#define LOG_DURATION(opName) benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(opName)
 
-#define LOG_DURATION_STREAM(op_name, stream) \
-    benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(op_name, stream)
+#define LOG_DURATION_STREAM(opName, stream)                                                        \
+    benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(opName, stream)
 
 namespace benchmarking {
 
 class LogDuration {
-    const std::string_view operation_name_;
-    std::ostream& output_stream_;
+    const std::string_view mOperationName;
+    std::ostream& mOutputStream;
 
     using Clock = std::chrono::steady_clock;
-    const Clock::time_point start_time_ = Clock::now();
+    const Clock::time_point mStartTime = Clock::now();
 
 public: // Constructor/destructor
 
-    explicit LogDuration(std::string_view operation_name, std::ostream& output_stream = std::cerr);
+    explicit LogDuration(std::string_view operationName, std::ostream& outputStream = std::cerr);
 
     ~LogDuration();
 };

@@ -1,75 +1,73 @@
 #include "generator.hpp"
 
-#include <benchmarking/benchmarking.hpp>
-
 #include <execution>
 #include <iostream>
 #include <string_view>
 
+#include <benchmarking/benchmarking.hpp>
+
 using namespace search_server;
 
 template <typename ExecutionPolicy>
-void RemoveDocumentImpl(std::string_view mark, const ExecutionPolicy& policy) {
-    SearchServer search_server = generator::const_search_server;
-    std::cerr << "Benchmarking of " << mark <<" RemoveDocument:\n";
+void removeDocumentImpl(std::string_view mark, const ExecutionPolicy& policy) {
+    SearchServer searchServer = generator::kConstSearchServer;
+    std::cerr << "Benchmarking of " << mark << " removeDocument:\n";
     {
         LOG_DURATION(mark);
-        const int document_count = search_server.GetDocumentCount();
-        for (int id = 0; id < document_count; ++id) {
-            search_server.RemoveDocument(policy, id);
+        const int documentCount = searchServer.getDocumentCount();
+        for (int id = 0; id < documentCount; ++id) {
+            searchServer.removeDocument(policy, id);
         }
-        std::cout << search_server.GetDocumentCount() << std::endl;
+        std::cout << searchServer.getDocumentCount() << std::endl;
     }
 }
 
-RUN(RemoveDocument) {
-    RemoveDocumentImpl("seq", std::execution::seq);
-    RemoveDocumentImpl("par", std::execution::par);
+RUN(removeDocument) {
+    removeDocumentImpl("seq", std::execution::seq);
+    removeDocumentImpl("par", std::execution::par);
 }
 
 template <typename ExecutionPolicy>
-void MatchDocumentImpl(std::string_view mark, const ExecutionPolicy& policy) {
-    const SearchServer& search_server = generator::const_search_server;
-    std::cerr << "Benchmarking of " << mark <<" MatchDocument:\n";
+void matchDocumentImpl(std::string_view mark, const ExecutionPolicy& policy) {
+    const SearchServer& searchServer = generator::kConstSearchServer;
+    std::cerr << "Benchmarking of " << mark << " matchDocument:\n";
     {
         LOG_DURATION(mark);
-        const int document_count = search_server.GetDocumentCount();
-        int word_count = 0;
-        for (int id = 0; id < document_count; ++id) {
-            const auto& [words, status] = search_server.MatchDocument(
-                    policy,
-                    generator::SearchServerGenerator::query,
-                    id);
-            word_count += words.size();
+        const int documentCount = searchServer.getDocumentCount();
+        int wordCount = 0;
+        for (int id = 0; id < documentCount; ++id) {
+            const auto& [words, status] =
+                    searchServer.matchDocument(policy, generator::SearchServerGenerator::query, id);
+            wordCount += words.size();
         }
-        std::cout << word_count << std::endl;
+        std::cout << wordCount << std::endl;
     }
 }
 
-RUN(MatchDocument) {
-    MatchDocumentImpl("seq", std::execution::seq);
-    MatchDocumentImpl("par", std::execution::par);
+RUN(matchDocument) {
+    matchDocumentImpl("seq", std::execution::seq);
+    matchDocumentImpl("par", std::execution::par);
 }
 
 template <typename ExecutionPolicy>
-void FindTopDocumentsImpl(std::string_view mark, const ExecutionPolicy& policy) {
-    const SearchServer& search_server = generator::const_search_server;
-    std::cerr << "Benchmarking of " << mark <<" FindTopDocuments:\n";
-    const auto queries = generator::GenerateQueries(
-            generator::SearchServerGenerator::dictionary, 100, 70);
+void findTopDocumentsImpl(std::string_view mark, const ExecutionPolicy& policy) {
+    const SearchServer& searchServer = generator::kConstSearchServer;
+    std::cerr << "Benchmarking of " << mark << " findTopDocuments:\n";
+    const auto queries =
+            generator::GenerateQueries(generator::SearchServerGenerator::dictionary, 100, 70);
     {
         LOG_DURATION(mark);
-        double total_relevance = 0.0;
+        double totalRelevance = 0.0;
         for (const auto& query : queries) {
-            for (const auto& document : search_server.FindTopDocuments(policy, query)) {
-                total_relevance += document.relevance;
+            for (const auto& document : searchServer.findTopDocuments(policy, query)) {
+                totalRelevance += document.relevance;
             }
         }
-        std::cout << total_relevance << std::endl;
+        std::cout << totalRelevance << std::endl;
     }
 }
 
-RUN(FindTopDocuments) {
-    FindTopDocumentsImpl("seq", std::execution::seq);
-    FindTopDocumentsImpl("par", std::execution::par);
+RUN(findTopDocuments) {
+    findTopDocumentsImpl("seq", std::execution::seq);
+    findTopDocumentsImpl("par", std::execution::par);
 }

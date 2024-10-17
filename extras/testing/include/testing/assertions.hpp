@@ -3,32 +3,32 @@
 
 #include <testing/details/output.hpp>
 
-#define ASSERT_EQUAL(a, b) \
+#define ASSERT_EQUAL(a, b)                                                                         \
     testing::AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, "")
 
-#define ASSERT_EQUAL_HINT(a, b, hint) \
+#define ASSERT_EQUAL_HINT(a, b, hint)                                                              \
     testing::AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
 
-#define ASSERT(expr) \
+#define ASSERT(expr)                                                                               \
     testing::AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, "")
 
-#define ASSERT_HINT(expr, hint) \
+#define ASSERT_HINT(expr, hint)                                                                    \
     testing::AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
 #define ASSERT_THROW(expression, exception)                                                        \
     do {                                                                                           \
-        constexpr auto error_output = []() -> std::ostream& {                                      \
+        constexpr auto errorOutput = []() -> std::ostream& {                                       \
             return std::cerr << __FILE__ << "(" << __LINE__ << "): " << __FUNCTION__ << ": "       \
                              << "ASSERT(" << #expression << ") failed. ";                          \
         };                                                                                         \
         try {                                                                                      \
             expression;                                                                            \
-            error_output() << #exception << "must be thrown." << std::endl;                        \
+            errorOutput() << #exception << "must be thrown." << std::endl;                         \
             std::abort();                                                                          \
         } catch (const exception&) {                                                               \
             /* Caught the expected exception */                                                    \
         } catch (...) {                                                                            \
-            error_output() << "Incorrect exception. Expect " << #exception << "." << std::endl;    \
+            errorOutput() << "Incorrect exception. Expect " << #exception << "." << std::endl;     \
             std::abort();                                                                          \
         }                                                                                          \
     } while (false)
@@ -36,16 +36,21 @@
 namespace testing {
 
 template <typename T, typename U>
-void AssertEqualImpl(const T& t, const U& u,
-                     std::string_view t_str_repr, std::string_view u_str_repr,
-                     std::string_view file_name, std::string_view fn_name, unsigned line_number,
+void AssertEqualImpl(const T& t,
+                     const U& u,
+                     std::string_view tStrRepr,
+                     std::string_view uStrRepr,
+                     std::string_view fileName,
+                     std::string_view fnName,
+                     unsigned lineNumber,
                      std::string_view hint) {
     using namespace testing::details;
     if (t != u) {
-        std::cerr << std::boolalpha
-                  << file_name << "(" << line_number << "): " << fn_name << ": "
-                  << "ASSERT_EQUAL(" << t_str_repr << ", " << u_str_repr << ") failed: "
+        // clang-format off
+        std::cerr << std::boolalpha << fileName << "(" << lineNumber << "): " << fnName << ": "
+                  << "ASSERT_EQUAL(" << tStrRepr << ", " << uStrRepr << ") failed: "
                   << t << " != " << u << ".";
+        // clang-format on
         if (!hint.empty()) {
             std::cerr << " Hint: " << hint;
         }
@@ -54,12 +59,15 @@ void AssertEqualImpl(const T& t, const U& u,
     }
 }
 
-inline void AssertImpl(bool value, std::string_view value_str_repr,
-                       std::string_view file_name, std::string_view fn_name, unsigned line_number,
+inline void AssertImpl(bool value,
+                       std::string_view valueStrRepr,
+                       std::string_view fileName,
+                       std::string_view fnName,
+                       unsigned lineNumber,
                        std::string_view hint) {
     if (!value) {
-        std::cerr << file_name << "(" << line_number << "): " << fn_name << ": "
-                  << "ASSERT(" << value_str_repr << ") failed.";
+        std::cerr << fileName << "(" << lineNumber << "): " << fnName << ": "
+                  << "ASSERT(" << valueStrRepr << ") failed.";
         if (!hint.empty()) {
             std::cerr << " Hint: " << hint;
         }

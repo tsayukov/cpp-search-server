@@ -7,22 +7,22 @@
 #include <string_view>
 #include <vector>
 
-#define RUN(name)                                                                                  \
-    namespace runner::namespace_##name {                                                           \
-        class FnRunner##name : public FnRunner {                                                   \
+#define RUN(runnerName)                                                                            \
+    namespace runner::namespace_##runnerName {                                                     \
+        class FnRunner_##runnerName : public FnRunner {                                            \
         public:                                                                                    \
-            std::string_view Name() const noexcept override {                                      \
-                return #name;                                                                      \
+            std::string_view name() const noexcept override {                                      \
+                return #runnerName;                                                                \
             }                                                                                      \
                                                                                                    \
-            void Run() const override;                                                             \
+            void run() const override;                                                             \
         };                                                                                         \
                                                                                                    \
-        inline const FnRunner##name singleton_fn_runner_##name{};                                  \
-    } /* namespace runner::namespace_##name */                                                     \
+        inline const FnRunner_##runnerName singletonFnRunner_##runnerName{};                       \
+    } /* namespace runner::namespace_##runnerName */                                               \
                                                                                                    \
-    inline void runner::namespace_##name::FnRunner##name::Run() const // {
-    //     /* code to run */
+    inline void runner::namespace_##runnerName::FnRunner_##runnerName::run() const // {
+    // /* code to run */
     // }
 
 namespace runner {
@@ -33,43 +33,42 @@ public:
 
     virtual ~FnRunner() = default;
 
-    virtual std::string_view Name() const noexcept = 0;
+    virtual std::string_view name() const noexcept = 0;
 
-    virtual void Run() const = 0;
+    virtual void run() const = 0;
 
-    virtual void PrettyRun() const {
-        Run();
-        std::cerr << Name() << " OK" << std::endl;
+    virtual void prettyRun() const {
+        run();
+        std::cerr << name() << " OK" << std::endl;
     }
 };
 
 class Runner {
-    std::vector<FnRunner*> fn_runners_;
+    std::vector<FnRunner*> mFnRunners;
 
 public: // Runner
 
     template <typename ExecutionPolicy = decltype(std::execution::seq)>
-    void RunAll(const ExecutionPolicy& policy = std::execution::seq) const {
-        std::for_each(policy, fn_runners_.begin(), fn_runners_.end(), [](FnRunner* fn_runner) {
-            fn_runner->PrettyRun();
-        });
+    void runAll(const ExecutionPolicy& policy = std::execution::seq) const {
+        std::for_each(policy, mFnRunners.begin(), mFnRunners.end(),
+                      [](FnRunner* fnRunner) { fnRunner->prettyRun(); });
     }
 
 public: // Modifier
 
-    void Add(FnRunner* fn_runner) {
-        fn_runners_.push_back(fn_runner);
+    void add(FnRunner* fnRunner) {
+        mFnRunners.push_back(fnRunner);
     }
 };
 
-inline Runner singleton_runner{};
+inline Runner singletonRunner{};
 
-inline Runner& GetRunner() noexcept {
-    return singleton_runner;
+inline Runner& getRunner() noexcept {
+    return singletonRunner;
 }
 
 inline FnRunner::FnRunner() {
-    GetRunner().Add(this);
+    getRunner().add(this);
 }
 
 } // namespace runner

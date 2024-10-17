@@ -1,19 +1,21 @@
 #ifndef SEARCH_SERVER_SEARCH_SERVER_HPP_
 #define SEARCH_SERVER_SEARCH_SERVER_HPP_
 
-#include <search_server/document.hpp>
 #include "search_server/details/concurrent_map.hpp"
 #include "search_server/details/string_processing.hpp"
 
+#include <search_server/document.hpp>
 #include <search_server/export.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <execution>
+#include <functional>
 #include <map>
+#include <optional>
 #include <set>
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <tuple>
 #include <type_traits>
@@ -23,7 +25,7 @@ namespace search_server {
 
 class SEARCH_SERVER_EXPORT SearchServer {
     struct DocumentData {
-        std::map<std::string_view, double> word_frequencies;
+        std::map<std::string_view, double> wordFrequencies;
         int rating;
         DocumentStatus status;
     };
@@ -34,10 +36,10 @@ class SEARCH_SERVER_EXPORT SearchServer {
     /// Words in other containers except stop-words only refer to these.
     using ReverseIndices = std::map<std::string, std::map<int, double>, std::less<>>;
 
-    std::set<std::string, std::less<>> stop_words_;
-    std::set<int> document_ids_;
-    Indices documents_;
-    ReverseIndices word_to_document_frequencies_;
+    std::set<std::string, std::less<>> mStopWords;
+    std::set<int> mDocumentIds;
+    Indices mDocuments;
+    ReverseIndices mWordToDocumentFrequencies;
 
 private: // Constants
 
@@ -46,21 +48,23 @@ private: // Constants
 
 public: // Constructors
 
+    // clang-format off
     template
             < typename Container
             , std::enable_if_t<details::kContainsStringViewLike<Container>, int> = 0
             >
-    explicit SearchServer(Container&& stop_words);
+    // clang-format on
+    explicit SearchServer(Container&& stopWords);
 
-    explicit SearchServer(std::string_view stop_words);
+    explicit SearchServer(std::string_view stopWords);
 
 public: // Capacity
 
-    int GetDocumentCount() const noexcept;
+    int getDocumentCount() const noexcept;
 
 public: // Lookup
 
-    const std::map<std::string_view, double>& GetWordFrequencies(int document_id) const;
+    const std::map<std::string_view, double>& getWordFrequencies(int documentId) const;
 
 public: // Iterators
 
@@ -69,136 +73,140 @@ public: // Iterators
 
 public: // Modifiers
 
-    void AddDocument(int document_id,
+    void addDocument(int documentId,
                      std::string_view document,
                      DocumentStatus status,
                      const std::vector<int>& ratings);
 
-    void RemoveDocument(int document_id);
-    void RemoveDocument(const std::execution::sequenced_policy&, int document_id);
-    void RemoveDocument(const std::execution::parallel_policy&, int document_id);
+    void removeDocument(int documentId);
+    void removeDocument(const std::execution::sequenced_policy&, int documentId);
+    void removeDocument(const std::execution::parallel_policy&, int documentId);
 
 public: // Search
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(std::string_view raw_query,
-                                           Predicate predicate) const;
+    std::vector<Document> findTopDocuments(std::string_view rawQuery, Predicate predicate) const;
 
     template <typename ExecutionPolicy, typename Predicate>
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view raw_query,
+    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
+                                           std::string_view rawQuery,
                                            Predicate predicate) const;
 
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(std::string_view raw_query,
-                                           DocumentStatus document_status) const;
+    std::vector<Document> findTopDocuments(std::string_view rawQuery,
+                                           DocumentStatus documentStatus) const;
 
     template <typename ExecutionPolicy>
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view raw_query,
-                                           DocumentStatus document_status) const;
+    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
+                                           std::string_view rawQuery,
+                                           DocumentStatus documentStatus) const;
 
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(std::string_view raw_query) const;
+    std::vector<Document> findTopDocuments(std::string_view rawQuery) const;
 
     template <typename ExecutionPolicy>
     [[nodiscard]]
-    std::vector<Document> FindTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view raw_query) const;
+    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
+                                           std::string_view rawQuery) const;
 
     using MatchingWordsAndDocStatus = std::tuple<std::vector<std::string_view>, DocumentStatus>;
 
     [[nodiscard]]
-    MatchingWordsAndDocStatus MatchDocument(std::string_view raw_query, int document_id) const;
+    MatchingWordsAndDocStatus matchDocument(std::string_view rawQuery, int documentId) const;
 
     [[nodiscard]]
-    MatchingWordsAndDocStatus MatchDocument(const std::execution::sequenced_policy&,
-                                            std::string_view raw_query,
-                                            int document_id) const;
+    MatchingWordsAndDocStatus matchDocument(const std::execution::sequenced_policy&,
+                                            std::string_view rawQuery,
+                                            int documentId) const;
 
     [[nodiscard]]
-    MatchingWordsAndDocStatus MatchDocument(const std::execution::parallel_policy&,
-                                            std::string_view raw_query,
-                                            int document_id) const;
+    MatchingWordsAndDocStatus matchDocument(const std::execution::parallel_policy&,
+                                            std::string_view rawQuery,
+                                            int documentId) const;
 
 private: // Checks
 
-    static void StringHasNotAnyForbiddenChars(std::string_view s);
+    static void stringHasNotAnyForbiddenChars(std::string_view s);
 
-    static void CheckDocumentIdIsNotNegative(int document_id);
+    static void checkDocumentIdIsNotNegative(int documentId);
 
-    void CheckDocumentIdDoesntExist(int document_id) const;
+    void checkDocumentIdDoesntExist(int documentId) const;
 
-    void CheckDocumentIdExists(int document_id) const;
+    void checkDocumentIdExists(int documentId) const;
 
-    bool IsStopWord(std::string_view word) const;
+    bool isStopWord(std::string_view word) const;
 
 private: // Metric computation
 
-    static int ComputeAverageRating(const std::vector<int>& ratings);
+    static int computeAverageRating(const std::vector<int>& ratings);
 
-    double ComputeInverseDocumentFrequency(std::size_t docs_with_the_word) const;
+    double computeInverseDocumentFrequency(std::size_t docsWithWord) const;
 
 private: // Parsing
 
     [[nodiscard]]
-    std::vector<std::string> SplitIntoWordsNoStop(std::string_view text) const;
+    std::vector<std::string> splitIntoWordsNoStop(std::string_view text) const;
 
     struct QueryWord {
         std::string_view content;
-        bool is_minus;
-        bool is_stop;
+        bool isMinus;
+        bool isStop;
     };
 
     struct Query {
-        std::vector<std::string_view> plus_words;
-        std::vector<std::string_view> minus_words;
+        std::vector<std::string_view> plusWords;
+        std::vector<std::string_view> minusWords;
     };
 
     [[nodiscard]]
-    QueryWord ParseQueryWord(std::string_view word) const;
+    QueryWord parseQueryWord(std::string_view word) const;
 
-    enum class WordsRepeatable : bool { kYes = true, kNo = false, };
+    enum class WordsRepeatable : bool {
+        kYes = true,
+        kNo = false,
+    };
 
     template <typename ExecutionPolicy>
     [[nodiscard]]
-    Query ParseQuery(const ExecutionPolicy& policy,
+    Query parseQuery(const ExecutionPolicy& policy,
                      std::string_view text,
-                     WordsRepeatable words_can_be_repeated) const;
+                     WordsRepeatable wordsCanBeRepeated) const;
 
 private: // Search
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> FindAllDocuments(const Query& query, Predicate predicate) const;
+    std::vector<Document> findAllDocuments(const Query& query, Predicate predicate) const;
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> FindAllDocuments(const std::execution::sequenced_policy&,
+    std::vector<Document> findAllDocuments(const std::execution::sequenced_policy&,
                                            const Query& query,
                                            Predicate predicate) const;
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> FindAllDocuments(const std::execution::parallel_policy& par_policy,
+    std::vector<Document> findAllDocuments(const std::execution::parallel_policy& par_policy,
                                            const Query& query,
                                            Predicate predicate) const;
 
     template <typename ExecutionPolicy, typename Map, typename Predicate>
-    void ComputeDocumentsRelevance(const ExecutionPolicy& policy,
-                                   Map& document_to_relevance,
+    void computeDocumentsRelevance(const ExecutionPolicy& policy,
+                                   Map& documentToRelevance,
                                    const Query& query,
                                    Predicate predicate) const;
 
     [[nodiscard]]
-    std::vector<Document> PrepareResult(const std::map<int, double>& document_to_relevance) const;
+    std::vector<Document> prepareResult(const std::map<int, double>& documentToRelevance) const;
 };
 
 SEARCH_SERVER_EXPORT
-void RemoveDuplicates(SearchServer& server, std::vector<int>* removed_ids = nullptr);
+void removeDuplicates(
+        SearchServer& server,
+        std::optional<std::reference_wrapper<std::vector<int>>> removedIds = std::nullopt);
 
 } // namespace search_server
 

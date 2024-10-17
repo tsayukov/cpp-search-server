@@ -1,8 +1,8 @@
 #include <search_server/search_server.hpp>
 
+#include <execution>
 #include <numeric>
 #include <stdexcept>
-#include <execution>
 
 namespace search_server {
 
@@ -10,273 +10,265 @@ using namespace std::string_literals;
 
 // Constructors
 
-SearchServer::SearchServer(std::string_view stop_words)
-        : SearchServer(details::SplitIntoWords(stop_words)) {
-}
+SearchServer::SearchServer(std::string_view stopWords)
+        : SearchServer(details::splitIntoWords(stopWords)) {}
 
 // Capacity
 
-int SearchServer::GetDocumentCount() const noexcept {
-    return static_cast<int>(documents_.size());
+int SearchServer::getDocumentCount() const noexcept {
+    return static_cast<int>(mDocuments.size());
 }
 
 // Lookup
 
-const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const {
-    static const std::map<std::string_view, double> empty_map;
+const std::map<std::string_view, double>& SearchServer::getWordFrequencies(int documentId) const {
+    static const std::map<std::string_view, double> emptyMap;
 
-    if (auto it = documents_.find(document_id); it != documents_.end()) {
-        return it->second.word_frequencies;
+    if (auto it = mDocuments.find(documentId); it != mDocuments.end()) {
+        return it->second.wordFrequencies;
     }
-    return empty_map;
+    return emptyMap;
 }
 
 // Iterators
 
 std::set<int>::const_iterator SearchServer::begin() const noexcept {
-    return document_ids_.begin();
+    return mDocumentIds.begin();
 }
 
 std::set<int>::const_iterator SearchServer::end() const noexcept {
-    return document_ids_.end();
+    return mDocumentIds.end();
 }
 
 // Modifiers
 
-void SearchServer::AddDocument(int document_id,
+void SearchServer::addDocument(int documentId,
                                std::string_view document,
                                DocumentStatus status,
                                const std::vector<int>& ratings) {
-    CheckDocumentIdIsNotNegative(document_id);
-    CheckDocumentIdDoesntExist(document_id);
+    checkDocumentIdIsNotNegative(documentId);
+    checkDocumentIdDoesntExist(documentId);
 
-    auto words = SplitIntoWordsNoStop(document);
+    auto words = splitIntoWordsNoStop(document);
 
-    document_ids_.insert(document_id);
-    auto& document_data = documents_[document_id];
-    document_data.rating = ComputeAverageRating(ratings);
-    document_data.status = status;
+    mDocumentIds.insert(documentId);
+    auto& documentData = mDocuments[documentId];
+    documentData.rating = computeAverageRating(ratings);
+    documentData.status = status;
 
-    const double inv_size = 1.0 / static_cast<double>(words.size());
+    const double invSize = 1.0 / static_cast<double>(words.size());
     for (auto& word : words) {
-        auto iter = word_to_document_frequencies_.find(word);
-        if (iter == word_to_document_frequencies_.end()) {
-            auto doc_frequency = std::map<int, double>{{document_id, inv_size}};
-            auto [insert_pos, _] = word_to_document_frequencies_.emplace(std::move(word), std::move(doc_frequency));
-            iter = insert_pos;
+        auto iter = mWordToDocumentFrequencies.find(word);
+        if (iter == mWordToDocumentFrequencies.end()) {
+            auto docFrequency = std::map<int, double>{{documentId, invSize}};
+            auto [insertPos, _] =
+                    mWordToDocumentFrequencies.emplace(std::move(word), std::move(docFrequency));
+            iter = insertPos;
         } else {
-            auto& doc_frequency = iter->second;
-            doc_frequency[document_id] += inv_size;
+            auto& docFrequency = iter->second;
+            docFrequency[documentId] += invSize;
         }
-        const std::string_view word_view = iter->first;
-        document_data.word_frequencies[word_view] += inv_size;
+        const std::string_view wordView = iter->first;
+        documentData.wordFrequencies[wordView] += invSize;
     }
 }
 
-void SearchServer::RemoveDocument(int document_id) {
-    if (auto doc_iter = documents_.find(document_id); doc_iter != documents_.end()) {
-        const auto& document_data = doc_iter->second;
-        for (const auto& [word, _] : document_data.word_frequencies) {
-            auto word_iter = word_to_document_frequencies_.find(word);
-            auto& documents_with_that_word = word_iter->second;
-            documents_with_that_word.erase(document_id);
+void SearchServer::removeDocument(int documentId) {
+    if (auto docIter = mDocuments.find(documentId); docIter != mDocuments.end()) {
+        const auto& documentData = docIter->second;
+        for (const auto& [word, _] : documentData.wordFrequencies) {
+            auto wordIter = mWordToDocumentFrequencies.find(word);
+            auto& documentsWithThatWord = wordIter->second;
+            documentsWithThatWord.erase(documentId);
 
-            if (documents_with_that_word.empty()) {
-                word_to_document_frequencies_.erase(word_iter);
+            if (documentsWithThatWord.empty()) {
+                mWordToDocumentFrequencies.erase(wordIter);
             }
         }
 
-        documents_.erase(doc_iter);
-        document_ids_.erase(document_id);
+        mDocuments.erase(docIter);
+        mDocumentIds.erase(documentId);
     }
 }
 
-void SearchServer::RemoveDocument(const std::execution::sequenced_policy&, int document_id) {
-    RemoveDocument(document_id);
+void SearchServer::removeDocument(const std::execution::sequenced_policy&, int documentId) {
+    removeDocument(documentId);
 }
 
-void SearchServer::RemoveDocument(const std::execution::parallel_policy&, int document_id) {
-    auto document_iter = documents_.find(document_id);
-    if (document_iter == documents_.end()) {
+void SearchServer::removeDocument(const std::execution::parallel_policy&, int documentId) {
+    auto documentIter = mDocuments.find(documentId);
+    if (documentIter == mDocuments.end()) {
         return;
     }
 
-    const auto& document_data = document_iter->second;
+    const auto& documentData = documentIter->second;
 
-    std::vector<std::string_view> word_views(document_data.word_frequencies.size());
-    std::transform(
-            document_data.word_frequencies.cbegin(), document_data.word_frequencies.cend(),
-            word_views.begin(),
-            [](const auto& key_value) {
-                return key_value.first;
-            });
+    std::vector<std::string_view> wordVews(documentData.wordFrequencies.size());
+    std::transform(documentData.wordFrequencies.cbegin(), documentData.wordFrequencies.cend(),
+                   wordVews.begin(), [](const auto& keyValue) { return keyValue.first; });
 
-    std::for_each(
-            std::execution::par,
-            word_views.cbegin(), word_views.cend(),
-            [this, document_id](const auto word_view) {
-                auto& documents_with_that_word = word_to_document_frequencies_.find(word_view)->second;
-                documents_with_that_word.erase(document_id);
-            });
+    std::for_each(std::execution::par, wordVews.cbegin(), wordVews.cend(),
+                  [this, documentId](const auto wordView) {
+                      auto& documentsWithThatWord =
+                              mWordToDocumentFrequencies.find(wordView)->second;
+                      documentsWithThatWord.erase(documentId);
+                  });
 
-    documents_.erase(document_iter);
-    document_ids_.erase(document_id);
+    mDocuments.erase(documentIter);
+    mDocumentIds.erase(documentId);
 }
 
 // Search
 
 [[nodiscard]]
-std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
-                                                     DocumentStatus document_status) const {
-    return FindTopDocuments(
-            raw_query,
-            [document_status](int /*document_id*/, DocumentStatus status, int /*rating*/) {
-                return status == document_status;
-            });
+std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
+                                                     DocumentStatus documentStatus) const {
+    return findTopDocuments(rawQuery,
+                            [documentStatus](int /*documentId*/, DocumentStatus status,
+                                             int /*rating*/) { return status == documentStatus; });
 }
 
 [[nodiscard]]
-std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
-    return FindTopDocuments(raw_query, DocumentStatus::kActual);
+std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery) const {
+    return findTopDocuments(rawQuery, DocumentStatus::kActual);
 }
 
 [[nodiscard]]
-SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(std::string_view raw_query,
-                                                                    int document_id) const {
-    CheckDocumentIdIsNotNegative(document_id);
-    CheckDocumentIdExists(document_id);
+SearchServer::MatchingWordsAndDocStatus SearchServer::matchDocument(std::string_view rawQuery,
+                                                                    int documentId) const {
+    checkDocumentIdIsNotNegative(documentId);
+    checkDocumentIdExists(documentId);
 
-    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::kNo);
-    const auto& document_data = documents_.at(document_id);
-    const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
+    const auto query = parseQuery(std::execution::seq, rawQuery, WordsRepeatable::kNo);
+    const auto& documentData = mDocuments.at(documentId);
+    const auto& wordFrequenciesInThatDocuments = documentData.wordFrequencies;
 
-    std::vector<std::string_view> matched_words;
-    for (const auto minus_word_view : query.minus_words) {
-        auto iter = word_frequencies_in_that_documents.find(minus_word_view);
-        if (iter != word_frequencies_in_that_documents.end()) {
-            return make_tuple(std::move(matched_words), document_data.status);
+    std::vector<std::string_view> matchedWords;
+    for (const auto minusWordView : query.minusWords) {
+        auto iter = wordFrequenciesInThatDocuments.find(minusWordView);
+        if (iter != wordFrequenciesInThatDocuments.end()) {
+            return make_tuple(std::move(matchedWords), documentData.status);
         }
     }
-    for (const auto plus_word_view : query.plus_words) {
-        auto iter = word_frequencies_in_that_documents.find(plus_word_view);
-        if (iter != word_frequencies_in_that_documents.end()) {
-            matched_words.emplace_back(plus_word_view);
+    for (const auto plusWordView : query.plusWords) {
+        auto iter = wordFrequenciesInThatDocuments.find(plusWordView);
+        if (iter != wordFrequenciesInThatDocuments.end()) {
+            matchedWords.emplace_back(plusWordView);
         }
     }
 
-    return make_tuple(std::move(matched_words), document_data.status);
+    return make_tuple(std::move(matchedWords), documentData.status);
 }
 
 [[nodiscard]]
-SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
-        const std::execution::sequenced_policy&, std::string_view raw_query, int document_id) const {
-    return MatchDocument(raw_query, document_id);
+SearchServer::MatchingWordsAndDocStatus
+SearchServer::matchDocument(const std::execution::sequenced_policy&,
+                            std::string_view rawQuery,
+                            int documentId) const {
+    return matchDocument(rawQuery, documentId);
 }
 
 [[nodiscard]]
-SearchServer::MatchingWordsAndDocStatus SearchServer::MatchDocument(
-        const std::execution::parallel_policy&, std::string_view raw_query, int document_id) const {
-    CheckDocumentIdIsNotNegative(document_id);
-    CheckDocumentIdExists(document_id);
+SearchServer::MatchingWordsAndDocStatus
+SearchServer::matchDocument(const std::execution::parallel_policy&,
+                            std::string_view rawQuery,
+                            int documentId) const {
+    checkDocumentIdIsNotNegative(documentId);
+    checkDocumentIdExists(documentId);
 
-    const auto query = ParseQuery(std::execution::seq, raw_query, WordsRepeatable::kYes);
-    const auto& document_data = documents_.at(document_id);
-    const auto& word_frequencies_in_that_documents = document_data.word_frequencies;
+    const auto query = parseQuery(std::execution::seq, rawQuery, WordsRepeatable::kYes);
+    const auto& documentData = mDocuments.at(documentId);
+    const auto& wordFrequenciesInThatDocuments = documentData.wordFrequencies;
 
-    std::vector<std::string_view> matched_words;
-    auto is_that_document_has_word = [&word_frequencies_in_that_documents](const auto word_view) {
-        return word_frequencies_in_that_documents.count(word_view) > 0;
+    std::vector<std::string_view> matchedWords;
+    auto isThatDocumentHasWord = [&wordFrequenciesInThatDocuments](const auto wordView) {
+        return wordFrequenciesInThatDocuments.count(wordView) > 0;
     };
 
-    const bool that_document_has_minus_word = std::any_of(
-            std::execution::par,
-            query.minus_words.begin(), query.minus_words.end(),
-            is_that_document_has_word);
-    if (that_document_has_minus_word) {
-        return make_tuple(std::move(matched_words), document_data.status);
+    const bool thatDocumentHasMinusWord =
+            std::any_of(std::execution::par, query.minusWords.begin(), query.minusWords.end(),
+                        isThatDocumentHasWord);
+    if (thatDocumentHasMinusWord) {
+        return make_tuple(std::move(matchedWords), documentData.status);
     }
 
-    matched_words.resize(query.plus_words.size());
-    auto begin_of_matched_words_to_remove = std::copy_if(
-            query.plus_words.begin(), query.plus_words.end(),
-            matched_words.begin(),
-            is_that_document_has_word);
+    matchedWords.resize(query.plusWords.size());
+    auto beginOfMatchedWordsToRemove = std::copy_if(query.plusWords.begin(), query.plusWords.end(),
+                                                    matchedWords.begin(), isThatDocumentHasWord);
 
-    matched_words.erase(begin_of_matched_words_to_remove, matched_words.end());
-    details::RemoveDuplicateWords(std::execution::par, matched_words);
+    matchedWords.erase(beginOfMatchedWordsToRemove, matchedWords.end());
+    details::removeDuplicateWords(std::execution::par, matchedWords);
 
-    return make_tuple(std::move(matched_words), document_data.status);
+    return make_tuple(std::move(matchedWords), documentData.status);
 }
 
 [[nodiscard]]
-std::vector<Document> SearchServer::PrepareResult(
-        const std::map<int, double>& document_to_relevance) const {
+std::vector<Document>
+SearchServer::prepareResult(const std::map<int, double>& documentToRelevance) const {
     std::vector<Document> result;
-    result.reserve(document_to_relevance.size());
-    for (const auto [document_id, relevance] : document_to_relevance) {
-        result.emplace_back(document_id, relevance, documents_.at(document_id).rating);
+    result.reserve(documentToRelevance.size());
+    for (const auto [documentId, relevance] : documentToRelevance) {
+        result.emplace_back(documentId, relevance, mDocuments.at(documentId).rating);
     }
     return result;
 }
 
 // Checks
 
-void SearchServer::StringHasNotAnyForbiddenChars(std::string_view s) {
+void SearchServer::stringHasNotAnyForbiddenChars(std::string_view s) {
     if (std::any_of(s.begin(), s.end(),
-                    [](const char c) {
-                        return iscntrl(static_cast<unsigned char>(c));
-                    })) {
+                    [](const char c) { return iscntrl(static_cast<unsigned char>(c)); })) {
         throw std::invalid_argument("Stop words contain forbidden characters from 0x00 to 0x1F"s);
     }
 }
 
-void SearchServer::CheckDocumentIdIsNotNegative(int document_id) {
-    if (document_id < 0) {
+void SearchServer::checkDocumentIdIsNotNegative(int documentId) {
+    if (documentId < 0) {
         throw std::invalid_argument("The negative document id"s);
     }
 }
 
-void SearchServer::CheckDocumentIdDoesntExist(int document_id) const {
-    if (documents_.count(document_id) > 0) {
+void SearchServer::checkDocumentIdDoesntExist(int documentId) const {
+    if (mDocuments.count(documentId) > 0) {
         throw std::invalid_argument("The passed document id already exists"s);
     }
 }
 
-void SearchServer::CheckDocumentIdExists(int document_id) const {
-    if (documents_.count(document_id) == 0) {
+void SearchServer::checkDocumentIdExists(int documentId) const {
+    if (mDocuments.count(documentId) == 0) {
         throw std::invalid_argument("The passed document id doesn't exist"s);
     }
 }
 
 [[nodiscard]]
-bool SearchServer::IsStopWord(std::string_view word) const {
-    return stop_words_.count(word) > 0;
+bool SearchServer::isStopWord(std::string_view word) const {
+    return mStopWords.count(word) > 0;
 }
 
 // Metric computation
 
 [[nodiscard]]
-int SearchServer::ComputeAverageRating(const std::vector<int>& ratings) {
+int SearchServer::computeAverageRating(const std::vector<int>& ratings) {
     if (ratings.empty()) {
         return 0;
     }
-    const int rating_sum = std::accumulate(ratings.begin(), ratings.end(), 0);
-    return rating_sum / static_cast<int>(ratings.size());
+    const int ratingSum = std::accumulate(ratings.begin(), ratings.end(), 0);
+    return ratingSum / static_cast<int>(ratings.size());
 }
 
 [[nodiscard]]
-double SearchServer::ComputeInverseDocumentFrequency(std::size_t docs_with_the_word) const {
-    return std::log(GetDocumentCount() / static_cast<double>(docs_with_the_word));
+double SearchServer::computeInverseDocumentFrequency(std::size_t docsWithWord) const {
+    return std::log(getDocumentCount() / static_cast<double>(docsWithWord));
 }
 
 // Parsing
 
-std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view text) const {
+std::vector<std::string> SearchServer::splitIntoWordsNoStop(std::string_view text) const {
     std::vector<std::string> result;
-    auto words = details::SplitIntoWords(text);
+    auto words = details::splitIntoWords(text);
     for (auto& word : words) {
-        StringHasNotAnyForbiddenChars(word);
-        if (!IsStopWord(word)) {
+        stringHasNotAnyForbiddenChars(word);
+        if (!isStopWord(word)) {
             result.push_back(std::move(word));
         }
     }
@@ -284,43 +276,44 @@ std::vector<std::string> SearchServer::SplitIntoWordsNoStop(std::string_view tex
 }
 
 [[nodiscard]]
-SearchServer::QueryWord SearchServer::ParseQueryWord(std::string_view word) const {
-    bool is_minus = (word[0] == '-');
-    if (is_minus) {
+SearchServer::QueryWord SearchServer::parseQueryWord(std::string_view word) const {
+    bool isMinus = (word[0] == '-');
+    if (isMinus) {
         if (word.size() == 1 || word[1] == '-') {
             throw std::invalid_argument("Incorrect form of minus words"s);
         }
         word = word.substr(1);
     }
-    return QueryWord{word, is_minus, IsStopWord(word)};
+    return QueryWord{word, isMinus, isStopWord(word)};
 }
 
 // Modifier
 
-void RemoveDuplicates(SearchServer &server, std::vector<int>* removed_ids) {
+void removeDuplicates(SearchServer& server,
+                      std::optional<std::reference_wrapper<std::vector<int>>> removedIds) {
     using namespace std::string_literals;
 
-    std::set<int> ids_to_remove;
+    std::set<int> idsToRemove;
     std::set<std::set<std::string_view>> documents;
     for (const auto id : server) {
         std::set<std::string_view> words;
-        const auto& word_frequencies = server.GetWordFrequencies(id);
-        std::transform(word_frequencies.begin(), word_frequencies.end(),
+        const auto& wordFrequencies = server.getWordFrequencies(id);
+        std::transform(wordFrequencies.begin(), wordFrequencies.end(),
                        std::inserter(words, words.end()),
-                       [](const auto& key_value) { return key_value.first; });
+                       [](const auto& keyValue) { return keyValue.first; });
         if (documents.count(words) == 0) {
             documents.insert(words);
         } else {
-            ids_to_remove.insert(id);
+            idsToRemove.insert(id);
         }
     }
 
-    for (const auto& id : ids_to_remove) {
-        server.RemoveDocument(id);
+    for (const auto& id : idsToRemove) {
+        server.removeDocument(id);
     }
 
-    if (removed_ids != nullptr) {
-        removed_ids->assign(ids_to_remove.begin(), ids_to_remove.end());
+    if (removedIds) {
+        removedIds.value().get().assign(idsToRemove.begin(), idsToRemove.end());
     }
 }
 

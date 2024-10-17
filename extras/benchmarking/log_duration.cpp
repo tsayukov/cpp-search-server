@@ -2,21 +2,22 @@
 
 namespace benchmarking {
 
-LogDuration::LogDuration(std::string_view operation_name, std::ostream& output_stream)
-        : operation_name_(operation_name)
-        , output_stream_(output_stream) {
-}
+LogDuration::LogDuration(std::string_view operationName, std::ostream& outputStream)
+        : mOperationName(operationName)
+        , mOutputStream(outputStream) {}
 
 LogDuration::~LogDuration() {
     using namespace std::chrono;
     using namespace std::literals;
 
-    const auto end_time = Clock::now();
-    const auto dur = end_time - start_time_;
-    output_stream_ << operation_name_
-                   << ": "
-                   << duration_cast<milliseconds>(dur).count() << " ms"
-                   << std::endl;
+    const auto endTime = Clock::now();
+    const auto dur = endTime - mStartTime;
+    // clang-format off
+    mOutputStream << mOperationName
+                  << ": "
+                  << duration_cast<milliseconds>(dur).count() << " ms"
+                  << std::endl;
+    // clang-format on
 }
 
 } // namespace benchmarking

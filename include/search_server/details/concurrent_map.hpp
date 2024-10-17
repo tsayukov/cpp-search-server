@@ -20,7 +20,7 @@ private:
         UnderlyingMap map;
     };
 
-    std::vector<Bucket> buckets_;
+    std::vector<Bucket> mBuckets;
 
 public:
 
@@ -29,38 +29,35 @@ public:
 
     // TODO: make private?
     class Access {
-        std::lock_guard<std::mutex> guard_;
-        Value& ref_to_value_;
+        std::lock_guard<std::mutex> mGuard;
+        Value& mRefToValue;
 
     public:
         Access(const Key& key, Bucket& bucket)
-                : guard_(bucket.mutex)
-                , ref_to_value_(bucket.map[key]) {
-        }
+                : mGuard(bucket.mutex)
+                , mRefToValue(bucket.map[key]) {}
 
         operator Value&() {
-            return ref_to_value_;
+            return mRefToValue;
         }
     };
 
-    explicit ConcurrentMap(size_t bucket_count)
-            : buckets_(bucket_count) {}
+    explicit ConcurrentMap(size_t bucket_count) : mBuckets(bucket_count) {}
 
     Access operator[](const Key& key) {
-        auto& bucket = GetBucket(key);
+        auto& bucket = getBucket(key);
         return {key, bucket};
     }
 
     void erase(const Key& key) {
-        auto& bucket = GetBucket(key);
+        auto& bucket = getBucket(key);
         std::lock_guard guard(bucket.mutex);
-        (void) bucket.map.erase(key);
+        (void)bucket.map.erase(key);
     }
 
-    // TODO: replace to cast?
-    UnderlyingMap BuildOrdinaryMap() {
+    UnderlyingMap buildOrdinaryMap() {
         UnderlyingMap result;
-        for (auto& [mutex, map] : buckets_) {
+        for (auto& [mutex, map] : mBuckets) {
             std::lock_guard guard(mutex);
             result.insert(map.begin(), map.end());
         }
@@ -69,8 +66,8 @@ public:
 
 private: // Bucket access
 
-    Bucket& GetBucket(const Key& key) {
-        return buckets_[static_cast<std::size_t>(key) % buckets_.size()];
+    Bucket& getBucket(const Key& key) {
+        return mBuckets[static_cast<std::size_t>(key) % mBuckets.size()];
     }
 };
 

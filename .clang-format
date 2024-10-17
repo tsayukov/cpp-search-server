@@ -1,0 +1,144 @@
+---
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: None
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveBitFields:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: false
+AlignConsecutiveShortCaseStatements:
+  Enabled: false
+# AlignEscapedNewlines: LeftWithLastLine
+AlignOperands: Align
+AlignTrailingComments:
+  Kind: Leave
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+# AllowBreakBeforeNoexceptSpecifier: Never
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+# AllowShortCompoundRequirementOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakBeforeMultilineStrings: false
+BinPackArguments: true
+BinPackParameters: false
+BitFieldColonSpacing: Both
+BreakBeforeBraces: Attach
+# BreakAdjacentStringLiterals: true
+BreakAfterAttributes: Leave
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeConceptDeclarations: Always
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+# BreakFunctionDefinitionParameters: false
+BreakInheritanceList: BeforeComma
+BreakStringLiterals: true
+AlwaysBreakTemplateDeclarations: true # BreakTemplateDeclarations: Yes
+ColumnLimit: 100
+CompactNamespaces: false
+ContinuationIndentWidth: 8
+IndentWidth: 4
+ConstructorInitializerIndentWidth: 8
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+EmptyLineAfterAccessModifier: Leave
+EmptyLineBeforeAccessModifier: LogicalBlock
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IndentAccessModifiers: false
+IndentCaseBlocks: false
+IndentCaseLabels: true
+IndentExternBlock: NoIndent
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash
+IndentRequiresClause: false
+IndentWrappedFunctionNames: false
+InsertBraces: false
+InsertNewlineAtEOF: true
+CommentPragmas: "'^ IWYU pragma:'"
+DisableFormat: false
+IncludeCategories:
+  - Regex: ^".*/.*\.(h|hpp)"
+    Priority: 2
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^".*\.(h|hpp)"
+    Priority: 1
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<(testing|benchmarking)/
+    Priority: 6
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*/.*\.(h|hpp)>
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*\.(h|hpp)>
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: false
+  - Regex: ^<.*
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: false
+IncludeIsMainRegex: "'([-_](test|unittest|ut))?$'"
+IncludeIsMainSourceRegex: "''"
+IntegerLiteralSeparator:
+  Binary: 8
+  Decimal: 3
+  Hex: -1
+# KeepEmptyLines:
+#   AtStartOfBlock: false
+#   AtStartOfFile: false
+#   AtEndOfFile: false
+LambdaBodyIndentation: Signature
+Language: Cpp
+# MainIncludeChar: Any
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+PPIndentWidth: 4
+PackConstructorInitializers: CurrentLine
+PointerAlignment: Left
+QualifierAlignment: Left
+ReferenceAlignment: Pointer
+ReflowComments: true
+RemoveBracesLLVM: false
+RemoveParentheses: Leave
+RemoveSemicolon: true
+RequiresClausePosition: SingleLine
+RequiresExpressionIndentation: OuterScope
+SeparateDefinitionBlocks: Leave
+ShortNamespaceLines: 1
+# SkipMacroDefinitionBody: false
+SortIncludes: CaseInsensitive
+SortUsingDeclarations: LexicographicNumeric
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: 1
+SpacesInParens: Never
+SpacesInParensOptions: {}
+UseTab: Never
+SpacesInSquareBrackets: false
