@@ -10,10 +10,10 @@ fcm_target_link_libraries(tests
     search_server::search_server
     search_server::testing_main
 )
-fcm_valgrind_add_memcheck(tests)
+fcm_valgrind_add_custom_target(FOR tests)
 
 add_test(NAME search_server.tests
   COMMAND search_server_tests --parallel
 )
 
-fcm_valgrind_add_unity_memcheck()
+fcm_valgrind_add_custom_target(UNITY memcheck)

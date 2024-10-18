@@ -23,6 +23,8 @@ fcm_no_in_source_builds_guard(
 fcm_use_cxx_standard_at_least(17)
 fcm_disable_cxx_extensions()
 
+add_subdirectory(extras)
+
 fcm_include("Dependencies" TEMPLATE)
 
 fcm_add_library(search_server)
@@ -42,7 +44,6 @@ fcm_generate_export_header(search_server
 )
 
 add_subdirectory(src)
-add_subdirectory(extras)
 
 if (ENABLE_TESTING)
   add_subdirectory(tests)
@@ -52,7 +53,7 @@ if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmarks)
 endif()
 
-fcm_clang_format_add(format
+fcm_clang_format_add_custom_target(format
   DIRECTORIES
     "include"
     "src"
@@ -61,7 +62,7 @@ fcm_clang_format_add(format
     "benchmarks"
 )
 
-fcm_doxygen_add_docs(docs
+fcm_doxygen_add_custom_target(docs
   FORMAT html
   INPUTS
     "include"
