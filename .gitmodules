@@ -1,4 +1,4 @@
 [submodule "cmake"]
 	path = cmake
-	url = git@github.com:tsayukov/cmake-modules.git
+	url = git@github.com:tsayukov/flexible-cmake-modules.git
 	branch = dev
