@@ -3,40 +3,28 @@
 
 #include <testing/details/output.hpp>
 
+#include <functional>
+
 #define ASSERT_EQUAL(a, b)                                                                         \
-    testing::AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, "")
+    testing::assertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, "")
 
 #define ASSERT_EQUAL_HINT(a, b, hint)                                                              \
-    testing::AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
+    testing::assertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
 
 #define ASSERT(expr)                                                                               \
-    testing::AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, "")
+    testing::assertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, "")
 
 #define ASSERT_HINT(expr, hint)                                                                    \
-    testing::AssertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
+    testing::assertImpl(static_cast<bool>(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
-#define ASSERT_THROW(expression, exception)                                                        \
-    do {                                                                                           \
-        constexpr auto errorOutput = []() -> std::ostream& {                                       \
-            return std::cerr << __FILE__ << "(" << __LINE__ << "): " << __FUNCTION__ << ": "       \
-                             << "ASSERT(" << #expression << ") failed. ";                          \
-        };                                                                                         \
-        try {                                                                                      \
-            expression;                                                                            \
-            errorOutput() << #exception << "must be thrown." << std::endl;                         \
-            std::abort();                                                                          \
-        } catch (const exception&) {                                                               \
-            /* Caught the expected exception */                                                    \
-        } catch (...) {                                                                            \
-            errorOutput() << "Incorrect exception. Expect " << #exception << "." << std::endl;     \
-            std::abort();                                                                          \
-        }                                                                                          \
-    } while (false)
+#define ASSERT_THROW(expr, exception)                                                              \
+    testing::assertThrowImpl<exception>([&] { expr; }, #expr, #exception, __FILE__, __FUNCTION__,  \
+                                        __LINE__)
 
 namespace testing {
 
 template <typename T, typename U>
-void AssertEqualImpl(const T& t,
+void assertEqualImpl(const T& t,
                      const U& u,
                      std::string_view tStrRepr,
                      std::string_view uStrRepr,
@@ -59,7 +47,7 @@ void AssertEqualImpl(const T& t,
     }
 }
 
-inline void AssertImpl(bool value,
+inline void assertImpl(bool value,
                        std::string_view valueStrRepr,
                        std::string_view fileName,
                        std::string_view fnName,
@@ -72,6 +60,29 @@ inline void AssertImpl(bool value,
             std::cerr << " Hint: " << hint;
         }
         std::cerr << std::endl;
+        std::abort();
+    }
+}
+
+template <typename Exception>
+void assertThrowImpl(std::function<void()> expression,
+                     std::string_view expressionStrRepr,
+                     std::string_view exceptionStrRepr,
+                     std::string_view fileName,
+                     std::string_view fnName,
+                     unsigned lineNumber) {
+    const auto errorOutput = [=]() -> std::ostream& {
+        return std::cerr << fileName << "(" << lineNumber << "): " << fnName << ": "
+                         << "ASSERT(" << expressionStrRepr << ") failed. ";
+    };
+    try {
+        expression();
+        errorOutput() << exceptionStrRepr << "must be thrown." << std::endl;
+        std::abort();
+    } catch (const Exception&) {
+        /* Caught the expected exception */
+    } catch (...) {
+        errorOutput() << "Incorrect exception. Expect " << exceptionStrRepr << "." << std::endl;
         std::abort();
     }
 }
