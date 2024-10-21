@@ -44,7 +44,7 @@ TEST(RangeBasedForLoop) {
     }
 }
 
-TEST(addDocument) {
+TEST(AddDocument) {
     const int docId = 42;
     const auto content = "cat in the city"sv;
     const std::vector<int> ratings = {1, 2, 3};
@@ -66,7 +66,7 @@ TEST(addDocument) {
     }
 }
 
-TEST(removeDocument) {
+TEST(RemoveDocument) {
     SearchServer server("and in with"sv);
     {
         server.removeDocument(1);
@@ -96,9 +96,11 @@ TEST(removeDocument) {
     }
 }
 
-TEST(getWordFrequencies) {
+TEST(GetWordFrequencies) {
     SearchServer server("and in with"sv);
-    { ASSERT(server.getWordFrequencies(1).empty()); }
+
+    ASSERT(server.getWordFrequencies(1).empty());
+
     const std::vector<int> ratings = {1, 2, 3};
     server.addDocument(0, "white cat"sv, DocumentStatus::kActual, ratings);
     server.addDocument(1, "black cat"sv, DocumentStatus::kActual, ratings);
@@ -218,7 +220,7 @@ TEST(DocumentRating) {
     }
 }
 
-TEST(findTopDocumentsWithPredicate) {
+TEST(FindTopDocumentsWithPredicate) {
     SearchServer server(""sv);
     server.addDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, {0});
     server.addDocument(2, "cat lives in the house"sv, DocumentStatus::kActual, {5});
@@ -238,7 +240,7 @@ TEST(findTopDocumentsWithPredicate) {
     }
 }
 
-TEST(findTopDocumentsWithSpecifiedStatus) {
+TEST(FindTopDocumentsWithSpecifiedStatus) {
     SearchServer server(""sv);
     server.addDocument(1, "nobody lives in the house"sv, DocumentStatus::kIrrelevant, {0});
     server.addDocument(2, "cat lives in the house"sv, DocumentStatus::kBanned, {5});
@@ -284,7 +286,7 @@ TEST(CorrectnessRelevance) {
     }
 }
 
-TEST(removeDuplicates) {
+TEST(RemoveDuplicates) {
     SearchServer server("and in with"sv);
     {
         ASSERT_EQUAL(server.getDocumentCount(), 0);
