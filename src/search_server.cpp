@@ -6,8 +6,6 @@
 
 namespace search_server {
 
-using namespace std::string_literals;
-
 // Constructors
 
 SearchServer::SearchServer(std::string_view stopWords)
@@ -218,25 +216,25 @@ SearchServer::prepareResult(const std::unordered_map<int, double>& documentToRel
 void SearchServer::stringHasNotAnyForbiddenChars(std::string_view s) {
     if (std::any_of(s.begin(), s.end(),
                     [](const char c) { return iscntrl(static_cast<unsigned char>(c)); })) {
-        throw std::invalid_argument("Stop words contain forbidden characters from 0x00 to 0x1F"s);
+        throw std::invalid_argument("Stop words contain forbidden characters from 0x00 to 0x1F");
     }
 }
 
 void SearchServer::checkDocumentIdIsNotNegative(int documentId) {
     if (documentId < 0) {
-        throw std::invalid_argument("The negative document id"s);
+        throw std::invalid_argument("The negative document id");
     }
 }
 
 void SearchServer::checkDocumentIdDoesntExist(int documentId) const {
     if (mDocuments.count(documentId) > 0) {
-        throw std::invalid_argument("The passed document id already exists"s);
+        throw std::invalid_argument("The passed document id already exists");
     }
 }
 
 void SearchServer::checkDocumentIdExists(int documentId) const {
     if (mDocuments.count(documentId) == 0) {
-        throw std::invalid_argument("The passed document id doesn't exist"s);
+        throw std::invalid_argument("The passed document id doesn't exist");
     }
 }
 
@@ -280,7 +278,7 @@ SearchServer::QueryWord SearchServer::parseQueryWord(std::string_view word) cons
     bool isMinus = (word[0] == '-');
     if (isMinus) {
         if (word.size() == 1 || word[1] == '-') {
-            throw std::invalid_argument("Incorrect form of minus words"s);
+            throw std::invalid_argument("Incorrect form of minus words");
         }
         word = word.substr(1);
     }
