@@ -74,8 +74,8 @@ void SearchServer::addDocument(int documentId,
 void SearchServer::removeDocument(int documentId) {
     if (auto docIter = mDocuments.find(documentId); docIter != mDocuments.end()) {
         const auto& documentData = docIter->second;
-        for (const auto& [word, _] : documentData.wordFrequencies) {
-            auto wordIter = mWordToDocumentFrequencies.find(word);
+        for (const auto& [wordView, _] : documentData.wordFrequencies) {
+            auto wordIter = mWordToDocumentFrequencies.find(wordView);
             auto& documentsWithThatWord = wordIter->second;
             documentsWithThatWord.erase(documentId);
 
