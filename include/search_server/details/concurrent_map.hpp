@@ -68,6 +68,9 @@ public: // Standard methods
 
 public: // Joiner of the underlying maps
 
+    /// NOTE: This is a simplified version. More general \c buildOrdinaryMap has to collect all
+    /// the mutexes as \c std::vector<std::unique_lock<std::mutex>> and then merges the underlying
+    /// maps. But for our purposes we don't need such a complication.
     UnderlyingMap buildOrdinaryMap() const {
         UnderlyingMap result;
         for (auto& [mutex, map] : mBuckets) {
