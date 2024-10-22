@@ -1,6 +1,8 @@
 #ifndef SEARCH_SERVER_DETAILS_STRING_PROCESSING_HPP_
 #define SEARCH_SERVER_DETAILS_STRING_PROCESSING_HPP_
 
+#include <search_server/export.hpp>
+
 #include <algorithm>
 #include <string>
 #include <string_view>
@@ -26,10 +28,10 @@ inline constexpr bool kContainsStringViewLike
 // clang-format on
 
 [[nodiscard]]
-std::vector<std::string> splitIntoWords(std::string_view text);
+SEARCH_SERVER_EXPORT std::vector<std::string> splitIntoWords(std::string_view text);
 
 [[nodiscard]]
-std::vector<std::string_view> splitIntoWordsView(std::string_view text);
+SEARCH_SERVER_EXPORT std::vector<std::string_view> splitIntoWordsView(std::string_view text);
 
 template <typename ExecutionPolicy, typename ContiguousContainer>
 void removeDuplicateWords(const ExecutionPolicy& policy, ContiguousContainer& container) {
