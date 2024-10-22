@@ -40,16 +40,20 @@ class ConcurrentMap {
     std::vector<Bucket> mBuckets;
     Hash mHasher;
 
-public:
+public: // Nested types
 
     using key_type = Key;
     using mapped_type = Value;
     using hasher = Hash;
     using key_equal = KeyEqual;
 
+public: // Constructor
+
     explicit ConcurrentMap(size_t bucket_count, const Hash& hasher = Hash())
             : mBuckets(bucket_count)
             , mHasher(hasher) {}
+
+public: // Standard methods
 
     Access operator[](const Key& key) {
         auto& bucket = getBucket(key);
@@ -61,6 +65,8 @@ public:
         std::unique_lock guard(bucket.mutex);
         (void)bucket.map.erase(key);
     }
+
+public: // Joiner of the underlying maps
 
     UnderlyingMap buildOrdinaryMap() const {
         UnderlyingMap result;
