@@ -37,13 +37,10 @@ SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
         }
     }
 
-    if (static_cast<bool>(wordsCanBeRepeated)) {
-        return query;
+    if (!static_cast<bool>(wordsCanBeRepeated)) {
+        details::removeDuplicateWords(policy, query.plusWords);
+        details::removeDuplicateWords(policy, query.minusWords);
     }
-
-    details::removeDuplicateWords(policy, query.plusWords);
-    details::removeDuplicateWords(policy, query.minusWords);
-
     return query;
 }
 
