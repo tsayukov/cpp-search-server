@@ -25,9 +25,9 @@ SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
                                              WordsRepeatable wordsCanBeRepeated) const {
     Query query;
     const auto words = details::splitIntoWordsView(text);
-    for (const auto word : words) {
-        stringHasNotAnyForbiddenChars(word);
-        const auto queryWord = parseQueryWord(word);
+    for (const auto wordView : words) {
+        stringHasNotAnyForbiddenChars(wordView);
+        const auto queryWord = parseQueryWord(wordView);
         if (!(queryWord.isStop)) {
             if (queryWord.isMinus) {
                 query.minusWords.push_back(queryWord.content);
