@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -13,74 +14,93 @@
 
 namespace search_server::generator {
 
+namespace bench = benchmarking;
+
 inline std::string generateWord(std::size_t maxLength) {
     if (maxLength == 0) {
         throw std::invalid_argument("`maxLength` cannot be zero.");
     }
 
-    const auto length = benchmarking::Generator<std::size_t>::get(1, maxLength);
+    const auto length = bench::Generator<std::size_t>::get(1, maxLength);
     std::string word;
     word.reserve(length);
-    for (std::size_t i = 0; i < length; ++i) {
-        word.push_back(benchmarking::Generator<char>::get());
-    }
+    std::generate_n(std::back_inserter(word), length,
+                    [&] { return bench::Generator<char>::get(); });
     return word;
 }
 
-inline std::vector<std::string> GenerateDictionary(std::size_t wordCount, std::size_t maxLength) {
+inline std::vector<std::string> generateDictionary(std::size_t wordCount, std::size_t maxLength) {
     if (wordCount == 0) {
         throw std::invalid_argument("`wordCount` cannot be zero.");
     }
 
     std::vector<std::string> words;
     words.reserve(wordCount);
-    for (std::size_t i = 0; i < wordCount; ++i) {
-        words.push_back(generateWord(maxLength));
-    }
-    std::sort(words.begin(), words.end());
-    words.erase(std::unique(words.begin(), words.end()), words.end());
+    std::generate_n(std::back_inserter(words), wordCount, [=] { return generateWord(maxLength); });
+    std::sort(std::execution::par, words.begin(), words.end());
+    words.erase(std::unique(std::execution::par, words.begin(), words.end()), words.end());
     return words;
 }
 
-inline std::string GenerateQuery(const std::vector<std::string>& dictionary,
-                                 std::size_t wordCount,
-                                 double minusProb = 0) {
+inline std::vector<std::string> generateStopWords(const std::vector<std::string>& dictionary,
+                                                  std::size_t wordCount) {
     if (wordCount == 0) {
         throw std::invalid_argument("`wordCount` cannot be zero.");
     }
 
+    std::vector<std::string> stopWords;
+    stopWords.reserve(wordCount);
+    std::generate_n(std::back_inserter(stopWords), wordCount, [&] {
+        const auto index = bench::Generator<std::size_t>::get(0, dictionary.size() - 1);
+        return dictionary[index];
+    });
+    std::sort(stopWords.begin(), stopWords.end());
+    stopWords.erase(std::unique(stopWords.begin(), stopWords.end()), stopWords.end());
+    return stopWords;
+}
+
+inline std::string generateQuery(const std::vector<std::string>& dictionary,
+                                 std::size_t maxWordCount,
+                                 double minusProb = 0) {
+    if (maxWordCount == 0) {
+        throw std::invalid_argument("`maxWordCount` cannot be zero.");
+    }
+
     std::string query;
+    const auto wordCount = bench::Generator<std::size_t>::get(1, maxWordCount);
     for (std::size_t i = 0; i < wordCount; ++i) {
         if (!query.empty()) {
             query.push_back(' ');
         }
-        if (benchmarking::Generator<double>::get(0, 1) < minusProb) {
+        if (bench::Generator<double>::get(0, 1) < minusProb) {
             query.push_back('-');
         }
-        query += dictionary[benchmarking::Generator<std::size_t>::get(0, dictionary.size() - 1)];
+        const auto index = bench::Generator<std::size_t>::get(0, dictionary.size() - 1);
+        query += dictionary[index];
     }
     return query;
 }
 
-inline std::vector<std::string> GenerateQueries(const std::vector<std::string>& dictionary,
+inline std::vector<std::string> generateQueries(const std::vector<std::string>& dictionary,
                                                 std::size_t queryCount,
                                                 std::size_t maxWordCount) {
     std::vector<std::string> queries;
     queries.reserve(queryCount);
     for (std::size_t i = 0; i < queryCount; ++i) {
-        queries.push_back(GenerateQuery(dictionary, maxWordCount));
+        queries.push_back(generateQuery(dictionary, maxWordCount));
     }
     return queries;
 }
 
 struct SearchServerGenerator {
-    inline static const auto dictionary = GenerateDictionary(1'000, 10);
-    inline static const auto documents = GenerateQueries(dictionary, 10'000, 70);
-    inline static const auto query = GenerateQuery(dictionary, 500, 0.1);
+    inline static const auto dictionary = generateDictionary(1'000, 10);
+    inline static const auto stopWords = generateStopWords(dictionary, 50);
+    inline static const auto documents = generateQueries(dictionary, 10'000, 70);
+    inline static const auto query = generateQuery(dictionary, 500, 0.1);
 };
 
 inline const SearchServer kConstSearchServer = std::invoke([] {
-    SearchServer searchServer(SearchServerGenerator::dictionary[0]);
+    SearchServer searchServer(SearchServerGenerator::stopWords);
     const std::vector<int> ratings = {1, 2, 3};
     for (std::size_t i = 0; i < SearchServerGenerator::documents.size(); ++i) {
         int documentId = static_cast<int>(i);
