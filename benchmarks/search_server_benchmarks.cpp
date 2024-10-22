@@ -50,8 +50,6 @@ RUN(MatchDocument) {
     ASSERT(quot - 1.5 >= 1e-6);
 }
 
-#if 0
-
 template <typename ExecutionPolicy>
 auto removeDocumentImpl(const ExecutionPolicy& policy) {
     auto searchServer = generator::generateSearchServer(100'000, 70);
@@ -77,7 +75,7 @@ RUN(RemoveDocument) {
     std::cout << "RemoveDocument (seq): " << seq << '\n';
     auto quot = seq / par;
     std::cout << "Quot: " << quot << std::endl;
-    ASSERT(quot - 1.0 >= 1e-6);
+    ASSERT(quot - 1.5 >= 1e-6);
 }
 
 template <typename ExecutionPolicy>
@@ -116,7 +114,5 @@ RUN(FindTopDocuments) {
     std::cout << "FindTopDocuments (seq): " << seq << '\n';
     auto quot = seq / par;
     std::cout << "Quot: " << quot << std::endl;
-    ASSERT(quot - 1.0 >= 1e-6);
+    ASSERT(quot - 1.5 >= 1e-6);
 }
-
-#endif
