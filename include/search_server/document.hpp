@@ -30,6 +30,10 @@ struct SEARCH_SERVER_EXPORT Document {
     Document(int id = 0, double relevance = 0.0, int rating = 0) noexcept;
 };
 
+/// Insert a textual representation of \c document into \c output as follows:
+/// \code
+/// { documentId = <id>, relevance = <relevance>, rating = <rating> }
+/// \endcode
 SEARCH_SERVER_EXPORT
 std::ostream& operator<<(std::ostream& output, const Document& document);
 
