@@ -28,12 +28,12 @@ SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
     const auto words = details::splitIntoWordsView(text);
     for (const auto word : words) {
         stringHasNotAnyForbiddenChars(word);
-        const auto query_word = parseQueryWord(word);
-        if (!(query_word.isStop)) {
-            if (query_word.isMinus) {
-                query.minusWords.push_back(query_word.content);
+        const auto queryWord = parseQueryWord(word);
+        if (!(queryWord.isStop)) {
+            if (queryWord.isMinus) {
+                query.minusWords.push_back(queryWord.content);
             } else {
-                query.plusWords.push_back(query_word.content);
+                query.plusWords.push_back(queryWord.content);
             }
         }
     }
@@ -118,12 +118,12 @@ std::vector<Document> SearchServer::findAllDocuments(const std::execution::seque
 template <typename Predicate>
 [[nodiscard]]
 std::vector<Document>
-SearchServer::findAllDocuments(const std::execution::parallel_policy& par_policy,
+SearchServer::findAllDocuments(const std::execution::parallel_policy& parPolicy,
                                const Query& query,
                                Predicate predicate) const {
     details::ConcurrentMap<int, double> concurrentDocToRelevance(
             std::thread::hardware_concurrency());
-    computeDocumentsRelevance(par_policy, concurrentDocToRelevance, query, predicate);
+    computeDocumentsRelevance(parPolicy, concurrentDocToRelevance, query, predicate);
     return prepareResult(concurrentDocToRelevance.buildOrdinaryMap());
 }
 
@@ -136,8 +136,8 @@ void SearchServer::computeDocumentsRelevance(const ExecutionPolicy& policy,
                   && std::is_floating_point_v<typename Map::mapped_type>);
 
     std::for_each(policy, query.plusWords.begin(), query.plusWords.end(),
-                  [this, predicate, &documentToRelevance](auto plus_word_view) {
-                      auto iter = mWordToDocumentFrequencies.find(plus_word_view);
+                  [this, predicate, &documentToRelevance](auto plusWordView) {
+                      auto iter = mWordToDocumentFrequencies.find(plusWordView);
                       if (iter == mWordToDocumentFrequencies.end()) {
                           return;
                       }
@@ -157,8 +157,8 @@ void SearchServer::computeDocumentsRelevance(const ExecutionPolicy& policy,
                   });
 
     std::for_each(policy, query.minusWords.begin(), query.minusWords.end(),
-                  [this, &documentToRelevance](auto minus_word_view) {
-                      auto iter = mWordToDocumentFrequencies.find(minus_word_view);
+                  [this, &documentToRelevance](auto minusWordView) {
+                      auto iter = mWordToDocumentFrequencies.find(minusWordView);
                       if (iter == mWordToDocumentFrequencies.end()) {
                           return;
                       }

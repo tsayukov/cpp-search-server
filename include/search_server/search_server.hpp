@@ -190,7 +190,7 @@ private: // Search
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> findAllDocuments(const std::execution::parallel_policy& par_policy,
+    std::vector<Document> findAllDocuments(const std::execution::parallel_policy& parPolicy,
                                            const Query& query,
                                            Predicate predicate) const;
 

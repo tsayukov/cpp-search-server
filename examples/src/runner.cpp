@@ -15,8 +15,8 @@ void run() {
     server.addDocument(2, "cat lives in the house", DocumentStatus::kActual, ratings);
     server.addDocument(6, "cat and dog live in the house", DocumentStatus::kActual, ratings);
     server.addDocument(4, "cat and dog and bird live in the house", DocumentStatus::kActual, ratings);
-    auto found_docs = server.findTopDocuments("cat dog bird");
-    std::cout << "Found: " << found_docs.size() << " documents." << std::endl;
+    auto foundDocs = server.findTopDocuments("cat dog bird");
+    std::cout << "Found: " << foundDocs.size() << " documents." << std::endl;
 }
 
 } // namespace runner
