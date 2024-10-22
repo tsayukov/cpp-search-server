@@ -10,25 +10,56 @@
 
 #define UNIQUE_VAR_NAME_PROFILE PROFILE_CONCAT(profileGuard, __LINE__)
 
-#define LOG_DURATION(opName) benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(opName)
+#define LOG_DURATION(outPtrDuration)                                                               \
+    benchmarking::OutputPointerLogDuration UNIQUE_VAR_NAME_PROFILE(outPtrDuration)
+
+#define LOG_DURATION_CERR(opName)                                                                  \
+    benchmarking::OutputStreamLogDuration UNIQUE_VAR_NAME_PROFILE(opName)
 
 #define LOG_DURATION_STREAM(opName, stream)                                                        \
-    benchmarking::LogDuration UNIQUE_VAR_NAME_PROFILE(opName, stream)
+    benchmarking::OutputStreamLogDuration UNIQUE_VAR_NAME_PROFILE(opName, stream)
 
 namespace benchmarking {
 
-class LogDuration {
-    const std::string_view mOperationName;
-    std::ostream& mOutputStream;
-
+class BaseLogDuration {
     using Clock = std::chrono::steady_clock;
     const Clock::time_point mStartTime = Clock::now();
 
+public: // Duration getter
+
+    template <typename Duration>
+    auto getDuration() const {
+        const auto endTime = Clock::now();
+        return std::chrono::duration_cast<Duration>(endTime - mStartTime);
+    }
+};
+
+template <typename Duration>
+class OutputPointerLogDuration : public BaseLogDuration {
+    static_assert(!std::is_const_v<Duration>);
+
+    Duration* const mOutPtrDuration;
+
 public: // Constructor/destructor
 
-    explicit LogDuration(std::string_view operationName, std::ostream& outputStream = std::cerr);
+    explicit OutputPointerLogDuration(Duration* outPtrDuration) noexcept
+            : mOutPtrDuration(outPtrDuration) {}
 
-    ~LogDuration();
+    ~OutputPointerLogDuration() {
+        *mOutPtrDuration = getDuration<Duration>();
+    }
+};
+
+class OutputStreamLogDuration : public BaseLogDuration {
+    const std::string_view mOperationName;
+    std::ostream& mOutputStream;
+
+public: // Constructor/destructor
+
+    explicit OutputStreamLogDuration(std::string_view operationName,
+                                     std::ostream& outputStream = std::cerr) noexcept;
+
+    ~OutputStreamLogDuration();
 };
 
 } // namespace benchmarking
