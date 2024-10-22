@@ -182,8 +182,7 @@ SearchServer::matchDocument(const std::execution::parallel_policy&,
     };
 
     const bool thatDocumentHasMinusWord =
-            std::any_of(std::execution::par, query.minusWords.begin(), query.minusWords.end(),
-                        isThatDocumentHasWord);
+            std::any_of(query.minusWords.begin(), query.minusWords.end(), isThatDocumentHasWord);
     if (thatDocumentHasMinusWord) {
         return make_tuple(std::move(matchedWords), documentData.status);
     }
