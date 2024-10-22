@@ -1,8 +1,5 @@
 if (ENABLE_TESTING OR ENABLE_BENCHMARKING)
   add_subdirectory(runner)
-endif()
-
-if (ENABLE_TESTING)
   add_subdirectory(testing)
   add_subdirectory(testing_main)
 endif()
