@@ -42,6 +42,8 @@ inline std::vector<std::string> generateDictionary(std::size_t wordCount, std::s
     return words;
 }
 
+inline const auto kDictionary = generateDictionary(1'000, 10);
+
 inline std::vector<std::string> generateStopWords(const std::vector<std::string>& dictionary,
                                                   std::size_t wordCount) {
     if (wordCount == 0) {
@@ -87,28 +89,23 @@ inline std::vector<std::string> generateQueries(const std::vector<std::string>& 
     std::vector<std::string> queries;
     queries.reserve(queryCount);
     for (std::size_t i = 0; i < queryCount; ++i) {
-        queries.push_back(generateQuery(dictionary, maxWordCount));
+        queries.push_back(generateQuery(dictionary, maxWordCount, 0.1));
     }
     return queries;
 }
 
-struct SearchServerGenerator {
-    inline static const auto dictionary = generateDictionary(1'000, 10);
-    inline static const auto stopWords = generateStopWords(dictionary, 50);
-    inline static const auto documents = generateQueries(dictionary, 10'000, 70);
-    inline static const auto query = generateQuery(dictionary, 500, 0.1);
-};
-
-inline const SearchServer kConstSearchServer = std::invoke([] {
-    SearchServer searchServer(SearchServerGenerator::stopWords);
+inline SearchServer generateSearchServer(std::size_t documentCount, std::size_t maxWordCount) {
+    SearchServer searchServer(generateStopWords(kDictionary, 50));
+    const auto documents = generateQueries(kDictionary, documentCount, maxWordCount);
     const std::vector<int> ratings = {1, 2, 3};
-    for (std::size_t i = 0; i < SearchServerGenerator::documents.size(); ++i) {
+    for (std::size_t i = 0; i < documents.size(); ++i) {
         int documentId = static_cast<int>(i);
-        searchServer.addDocument(documentId, SearchServerGenerator::documents[i],
-                                 DocumentStatus::kActual, ratings);
+        searchServer.addDocument(documentId, documents[i], DocumentStatus::kActual, ratings);
     }
     return searchServer;
-});
+}
+
+inline const SearchServer kConstSearchServer = generateSearchServer(10'000, 70);
 
 } // namespace search_server::generator
 
