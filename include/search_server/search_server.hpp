@@ -19,6 +19,7 @@
 #include <thread>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 namespace search_server {
@@ -30,11 +31,11 @@ class SEARCH_SERVER_EXPORT SearchServer {
         DocumentStatus status;
     };
 
-    using Indices = std::map<int, DocumentData>;
+    using Indices = std::unordered_map<int, DocumentData>;
 
     /// Storage for original words represented as \c std::string.
     /// Words in other containers except stop-words only refer to these.
-    using ReverseIndices = std::map<std::string, std::map<int, double>, std::less<>>;
+    using ReverseIndices = std::map<std::string, std::unordered_map<int, double>, std::less<>>;
 
     std::set<std::string, std::less<>> mStopWords;
     std::set<int> mDocumentIds;
@@ -200,7 +201,8 @@ private: // Search
                                    Predicate predicate) const;
 
     [[nodiscard]]
-    std::vector<Document> prepareResult(const std::map<int, double>& documentToRelevance) const;
+    std::vector<Document>
+    prepareResult(const std::unordered_map<int, double>& documentToRelevance) const;
 };
 
 SEARCH_SERVER_EXPORT

@@ -60,7 +60,7 @@ void SearchServer::addDocument(int documentId,
     for (auto& word : words) {
         auto iter = mWordToDocumentFrequencies.find(word);
         if (iter == mWordToDocumentFrequencies.end()) {
-            auto docFrequency = std::map<int, double>{{documentId, invSize}};
+            auto docFrequency = std::unordered_map<int, double>{{documentId, invSize}};
             auto [insertPos, _] =
                     mWordToDocumentFrequencies.emplace(std::move(word), std::move(docFrequency));
             iter = insertPos;
@@ -204,7 +204,7 @@ SearchServer::matchDocument(const std::execution::parallel_policy&,
 
 [[nodiscard]]
 std::vector<Document>
-SearchServer::prepareResult(const std::map<int, double>& documentToRelevance) const {
+SearchServer::prepareResult(const std::unordered_map<int, double>& documentToRelevance) const {
     std::vector<Document> result;
     result.reserve(documentToRelevance.size());
     for (const auto [documentId, relevance] : documentToRelevance) {

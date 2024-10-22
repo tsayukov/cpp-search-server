@@ -1,48 +1,55 @@
 #ifndef SEARCH_SERVER_DETAILS_CONCURRENT_MAP_HPP_
 #define SEARCH_SERVER_DETAILS_CONCURRENT_MAP_HPP_
 
-#include <map>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 namespace search_server::details {
 
-template <typename Key, typename Value>
+// clang-format off
+template
+        < typename Key
+        , typename Value
+        , typename Hash = std::hash<Key>
+        , typename KeyEqual = std::equal_to<Key>
+        >
+// clang-format on
 class ConcurrentMap {
-private:
-    static_assert(std::is_integral_v<Key>,
-                  "search_server::details::ConcurrentMap supports only integer keys");
-
-    using UnderlyingMap = std::map<Key, Value>;
+    using UnderlyingMap = std::unordered_map<Key, Value, Hash, KeyEqual>;
 
     struct Bucket {
-        std::mutex mutex;
+        mutable std::mutex mutex;
         UnderlyingMap map;
     };
 
+    class Access {
+        std::unique_lock<std::mutex> mGuard;
+        Value* mValuePtr;
+
+    public:
+        Access(const Key& key, Bucket& bucket)
+                : mGuard(bucket.mutex)
+                , mValuePtr(&bucket.map[key]) {}
+
+        operator Value&() {
+            return *mValuePtr;
+        }
+    };
+
     std::vector<Bucket> mBuckets;
+    Hash mHasher;
 
 public:
 
     using key_type = Key;
     using mapped_type = Value;
+    using hasher = Hash;
+    using key_equal = KeyEqual;
 
-    // TODO: make private?
-    class Access {
-        std::lock_guard<std::mutex> mGuard;
-        Value& mRefToValue;
-
-    public:
-        Access(const Key& key, Bucket& bucket)
-                : mGuard(bucket.mutex)
-                , mRefToValue(bucket.map[key]) {}
-
-        operator Value&() {
-            return mRefToValue;
-        }
-    };
-
-    explicit ConcurrentMap(size_t bucket_count) : mBuckets(bucket_count) {}
+    explicit ConcurrentMap(size_t bucket_count, const Hash& hasher = Hash())
+            : mBuckets(bucket_count)
+            , mHasher(hasher) {}
 
     Access operator[](const Key& key) {
         auto& bucket = getBucket(key);
@@ -51,14 +58,14 @@ public:
 
     void erase(const Key& key) {
         auto& bucket = getBucket(key);
-        std::lock_guard guard(bucket.mutex);
+        std::unique_lock guard(bucket.mutex);
         (void)bucket.map.erase(key);
     }
 
-    UnderlyingMap buildOrdinaryMap() {
+    UnderlyingMap buildOrdinaryMap() const {
         UnderlyingMap result;
         for (auto& [mutex, map] : mBuckets) {
-            std::lock_guard guard(mutex);
+            std::unique_lock guard(mutex);
             result.insert(map.begin(), map.end());
         }
         return result;
@@ -67,7 +74,7 @@ public:
 private: // Bucket access
 
     Bucket& getBucket(const Key& key) {
-        return mBuckets[static_cast<std::size_t>(key) % mBuckets.size()];
+        return mBuckets[mHasher(key) % mBuckets.size()];
     }
 };
 

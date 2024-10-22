@@ -102,7 +102,7 @@ template <typename Predicate>
 [[nodiscard]]
 std::vector<Document> SearchServer::findAllDocuments(const Query& query,
                                                      Predicate predicate) const {
-    std::map<int, double> docToRelevance;
+    std::unordered_map<int, double> docToRelevance;
     computeDocumentsRelevance(std::execution::seq, docToRelevance, query, predicate);
     return prepareResult(docToRelevance);
 }

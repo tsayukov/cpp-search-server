@@ -42,6 +42,13 @@ std::ostream& operator<<(std::ostream& output, const std::map<K, V>& map) {
     return output << "}";
 }
 
+template <typename K, typename V>
+std::ostream& operator<<(std::ostream& output, const std::unordered_map<K, V>& set) {
+    output << "{";
+    printContainer(output, set);
+    return output << "}";
+}
+
 template <typename F, typename S>
 std::ostream& operator<<(std::ostream& output, const std::pair<F, S>& pair) {
     return output << pair.first << ": " << pair.second;
