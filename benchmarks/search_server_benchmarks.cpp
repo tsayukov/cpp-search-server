@@ -32,7 +32,7 @@ auto matchDocumentImpl(const ExecutionPolicy& policy,
     }
 
     // To prevent optimization of the benchmarking code
-    std::cout << wordCount << std::endl;
+    std::cout << "Matched words' count: " << wordCount << std::endl;
 
     return static_cast<double>(duration.count());
 }
@@ -63,7 +63,7 @@ auto removeDocumentImpl(const ExecutionPolicy& policy) {
     }
 
     // To prevent optimization of the benchmarking code
-    std::cout << searchServer.getDocumentCount() << std::endl;
+    std::cout << "Document's count: " << searchServer.getDocumentCount() << std::endl;
 
     return static_cast<double>(duration.count());
 }
@@ -99,7 +99,7 @@ auto findTopDocumentsImpl(const ExecutionPolicy& policy,
             totalRelevance += doc.relevance;
         }
     }
-    std::cout << totalRelevance << std::endl;
+    std::cout << "Total relevance: " << totalRelevance << std::endl;
 
     return static_cast<double>(duration.count());
 }
