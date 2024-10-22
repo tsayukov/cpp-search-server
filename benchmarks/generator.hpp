@@ -4,8 +4,8 @@
 #include <search_server/search_server.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -14,7 +14,9 @@
 namespace search_server::generator {
 
 inline std::string generateWord(std::size_t maxLength) {
-    assert(maxLength > 0);
+    if (maxLength == 0) {
+        throw std::invalid_argument("`maxLength` cannot be zero.");
+    }
 
     const auto length = benchmarking::Generator<std::size_t>::get(1, maxLength);
     std::string word;
@@ -26,7 +28,9 @@ inline std::string generateWord(std::size_t maxLength) {
 }
 
 inline std::vector<std::string> GenerateDictionary(std::size_t wordCount, std::size_t maxLength) {
-    assert(wordCount > 0);
+    if (wordCount == 0) {
+        throw std::invalid_argument("`wordCount` cannot be zero.");
+    }
 
     std::vector<std::string> words;
     words.reserve(wordCount);
@@ -41,7 +45,9 @@ inline std::vector<std::string> GenerateDictionary(std::size_t wordCount, std::s
 inline std::string GenerateQuery(const std::vector<std::string>& dictionary,
                                  std::size_t wordCount,
                                  double minusProb = 0) {
-    assert(wordCount > 0);
+    if (wordCount == 0) {
+        throw std::invalid_argument("`wordCount` cannot be zero.");
+    }
 
     std::string query;
     for (std::size_t i = 0; i < wordCount; ++i) {
