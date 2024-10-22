@@ -143,14 +143,12 @@ SearchServer::MatchingWordsAndDocStatus SearchServer::matchDocument(std::string_
 
     std::vector<std::string_view> matchedWords;
     for (const auto minusWordView : query.minusWords) {
-        auto iter = wordFrequenciesInThatDocuments.find(minusWordView);
-        if (iter != wordFrequenciesInThatDocuments.end()) {
+        if (wordFrequenciesInThatDocuments.count(minusWordView) != 0) {
             return make_tuple(std::move(matchedWords), documentData.status);
         }
     }
     for (const auto plusWordView : query.plusWords) {
-        auto iter = wordFrequenciesInThatDocuments.find(plusWordView);
-        if (iter != wordFrequenciesInThatDocuments.end()) {
+        if (wordFrequenciesInThatDocuments.count(plusWordView) != 0) {
             matchedWords.emplace_back(plusWordView);
         }
     }
@@ -179,8 +177,8 @@ SearchServer::matchDocument(const std::execution::parallel_policy&,
     const auto& wordFrequenciesInThatDocuments = documentData.wordFrequencies;
 
     std::vector<std::string_view> matchedWords;
-    auto isThatDocumentHasWord = [&wordFrequenciesInThatDocuments](const auto wordView) {
-        return wordFrequenciesInThatDocuments.count(wordView) > 0;
+    const auto isThatDocumentHasWord = [&wordFrequenciesInThatDocuments](const auto wordView) {
+        return wordFrequenciesInThatDocuments.count(wordView) != 0;
     };
 
     const bool thatDocumentHasMinusWord =
