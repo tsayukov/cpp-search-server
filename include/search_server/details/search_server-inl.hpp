@@ -20,7 +20,6 @@ SearchServer::SearchServer(Container&& stopWords) {
 // Parsing
 
 template <typename ExecutionPolicy>
-[[nodiscard]]
 SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
                                              std::string_view text,
                                              WordsRepeatable wordsCanBeRepeated) const {
@@ -51,14 +50,12 @@ SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
 // Search
 
 template <typename Predicate>
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
                                                      Predicate predicate) const {
     return findTopDocuments(std::execution::seq, rawQuery, predicate);
 }
 
 template <typename ExecutionPolicy, typename Predicate>
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
                                                      std::string_view rawQuery,
                                                      Predicate predicate) const {
@@ -79,7 +76,6 @@ std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& poli
 }
 
 template <typename ExecutionPolicy>
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
                                                      std::string_view rawQuery,
                                                      DocumentStatus documentStatus) const {
@@ -91,14 +87,12 @@ std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& poli
 }
 
 template <typename ExecutionPolicy>
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
                                                      std::string_view rawQuery) const {
     return findTopDocuments(policy, rawQuery, DocumentStatus::kActual);
 }
 
 template <typename Predicate>
-[[nodiscard]]
 std::vector<Document> SearchServer::findAllDocuments(const Query& query,
                                                      Predicate predicate) const {
     std::unordered_map<int, double> docToRelevance;
@@ -107,7 +101,6 @@ std::vector<Document> SearchServer::findAllDocuments(const Query& query,
 }
 
 template <typename Predicate>
-[[nodiscard]]
 std::vector<Document> SearchServer::findAllDocuments(const std::execution::sequenced_policy&,
                                                      const Query& query,
                                                      Predicate predicate) const {
@@ -115,7 +108,6 @@ std::vector<Document> SearchServer::findAllDocuments(const std::execution::seque
 }
 
 template <typename Predicate>
-[[nodiscard]]
 std::vector<Document>
 SearchServer::findAllDocuments(const std::execution::parallel_policy& parPolicy,
                                const Query& query,

@@ -118,7 +118,6 @@ void SearchServer::removeDocument(const std::execution::parallel_policy&, int do
 
 // Search
 
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
                                                      DocumentStatus documentStatus) const {
     return findTopDocuments(rawQuery,
@@ -126,12 +125,10 @@ std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
                                              int /*rating*/) { return status == documentStatus; });
 }
 
-[[nodiscard]]
 std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery) const {
     return findTopDocuments(rawQuery, DocumentStatus::kActual);
 }
 
-[[nodiscard]]
 SearchServer::MatchingWordsAndDocStatus SearchServer::matchDocument(std::string_view rawQuery,
                                                                     int documentId) const {
     checkDocumentIdIsNotNegative(documentId);
@@ -156,7 +153,6 @@ SearchServer::MatchingWordsAndDocStatus SearchServer::matchDocument(std::string_
     return make_tuple(std::move(matchedWords), documentData.status);
 }
 
-[[nodiscard]]
 SearchServer::MatchingWordsAndDocStatus
 SearchServer::matchDocument(const std::execution::sequenced_policy&,
                             std::string_view rawQuery,
@@ -164,7 +160,6 @@ SearchServer::matchDocument(const std::execution::sequenced_policy&,
     return matchDocument(rawQuery, documentId);
 }
 
-[[nodiscard]]
 SearchServer::MatchingWordsAndDocStatus
 SearchServer::matchDocument(const std::execution::parallel_policy&,
                             std::string_view rawQuery,
@@ -197,7 +192,6 @@ SearchServer::matchDocument(const std::execution::parallel_policy&,
     return make_tuple(std::move(matchedWords), documentData.status);
 }
 
-[[nodiscard]]
 std::vector<Document>
 SearchServer::prepareResult(const std::unordered_map<int, double>& documentToRelevance) const {
     std::vector<Document> result;
@@ -235,14 +229,12 @@ void SearchServer::checkDocumentIdExists(int documentId) const {
     }
 }
 
-[[nodiscard]]
 bool SearchServer::isStopWord(std::string_view word) const {
     return mStopWords.count(word) > 0;
 }
 
 // Metric computation
 
-[[nodiscard]]
 int SearchServer::computeAverageRating(const std::vector<int>& ratings) {
     if (ratings.empty()) {
         return 0;
@@ -251,7 +243,6 @@ int SearchServer::computeAverageRating(const std::vector<int>& ratings) {
     return ratingSum / static_cast<int>(ratings.size());
 }
 
-[[nodiscard]]
 double SearchServer::computeInverseDocumentFrequency(std::size_t nDocsWithWord) const noexcept {
     return std::log(getDocumentCount() / static_cast<double>(nDocsWithWord));
 }
@@ -270,7 +261,6 @@ std::vector<std::string_view> SearchServer::splitIntoWordsNoStop(std::string_vie
     return result;
 }
 
-[[nodiscard]]
 SearchServer::QueryWord SearchServer::parseQueryWord(std::string_view word) const {
     bool isMinus = (word[0] == '-');
     if (isMinus) {
