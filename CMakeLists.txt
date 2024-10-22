@@ -25,11 +25,22 @@ fcm_disable_cxx_extensions()
 
 add_subdirectory(extras)
 
+if (UNIX)
+  find_package(TBB)
+  if (NOT TBB_FOUND)
+    message(AUTHOR_WARNING
+      "TBB is not found! Parallel versions of methods may be slower."
+    )
+  endif()
+endif()
+
 fcm_include("Dependencies" TEMPLATE)
 
 fcm_add_library(search_server)
 fcm_target_link_libraries(search_server
-  PUBLIC search_server::cxx_standard
+  PUBLIC
+    search_server::cxx_standard
+    $<TARGET_NAME_IF_EXISTS:TBB::tbb>
 )
 fcm_target_compile_options(search_server
   PRIVATE ${CXX_OPTIONS}
