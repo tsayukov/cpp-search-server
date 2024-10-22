@@ -103,11 +103,11 @@ void SearchServer::removeDocument(const std::execution::parallel_policy&, int do
 
     const auto& documentData = documentIter->second;
 
-    std::vector<std::string_view> wordVews(documentData.wordFrequencies.size());
+    std::vector<std::string_view> wordViews(documentData.wordFrequencies.size());
     std::transform(documentData.wordFrequencies.cbegin(), documentData.wordFrequencies.cend(),
-                   wordVews.begin(), [](const auto& keyValue) { return keyValue.first; });
+                   wordViews.begin(), [](const auto& keyValue) { return keyValue.first; });
 
-    std::for_each(std::execution::par, wordVews.cbegin(), wordVews.cend(),
+    std::for_each(std::execution::par, wordViews.cbegin(), wordViews.cend(),
                   [this, documentId](const auto wordView) {
                       auto& documentsWithThatWord =
                               mWordToDocumentFrequencies.find(wordView)->second;
