@@ -5,8 +5,13 @@ fcm_target_compile_options(benchmarks
 fcm_target_link_libraries(benchmarks
   PRIVATE
     search_server::search_server
+    search_server::testing
     search_server::benchmarking_main
 )
 fcm_target_sources(benchmarks
   PRIVATE search_server_benchmarks.cpp
+)
+
+add_test(NAME search_server.benchmarks
+  COMMAND search_server_benchmarks
 )
