@@ -253,8 +253,8 @@ int SearchServer::computeAverageRating(const std::vector<int>& ratings) {
 }
 
 [[nodiscard]]
-double SearchServer::computeInverseDocumentFrequency(std::size_t docsWithWord) const {
-    return std::log(getDocumentCount() / static_cast<double>(docsWithWord));
+double SearchServer::computeInverseDocumentFrequency(std::size_t nDocsWithWord) const noexcept {
+    return std::log(getDocumentCount() / static_cast<double>(nDocsWithWord));
 }
 
 // Parsing

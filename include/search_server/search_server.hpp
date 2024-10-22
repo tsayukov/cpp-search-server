@@ -144,7 +144,7 @@ private: // Metric computation
 
     static int computeAverageRating(const std::vector<int>& ratings);
 
-    double computeInverseDocumentFrequency(std::size_t docsWithWord) const;
+    double computeInverseDocumentFrequency(std::size_t nDocsWithWord) const noexcept;
 
 private: // Parsing
 
