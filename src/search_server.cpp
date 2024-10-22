@@ -47,7 +47,7 @@ void SearchServer::addDocument(int documentId,
     checkDocumentIdIsNotNegative(documentId);
     checkDocumentIdDoesntExist(documentId);
 
-    auto words = splitIntoWordsNoStop(document);
+    const auto words = splitIntoWordsNoStop(document);
 
     mDocumentIds.insert(documentId);
     auto& documentData = mDocuments[documentId];
@@ -55,19 +55,19 @@ void SearchServer::addDocument(int documentId,
     documentData.status = status;
 
     const double invSize = 1.0 / static_cast<double>(words.size());
-    for (auto& word : words) {
-        auto iter = mWordToDocumentFrequencies.find(word);
+    for (const auto wordView : words) {
+        auto iter = mWordToDocumentFrequencies.find(wordView);
         if (iter == mWordToDocumentFrequencies.end()) {
             auto docFrequency = std::unordered_map<int, double>{{documentId, invSize}};
             auto [insertPos, _] =
-                    mWordToDocumentFrequencies.emplace(std::move(word), std::move(docFrequency));
+                    mWordToDocumentFrequencies.emplace(wordView, std::move(docFrequency));
             iter = insertPos;
         } else {
             auto& docFrequency = iter->second;
             docFrequency[documentId] += invSize;
         }
-        const std::string_view wordView = iter->first;
-        documentData.wordFrequencies[wordView] += invSize;
+        const std::string_view classWordView = iter->first;
+        documentData.wordFrequencies[classWordView] += invSize;
     }
 }
 
@@ -259,13 +259,13 @@ double SearchServer::computeInverseDocumentFrequency(std::size_t nDocsWithWord) 
 
 // Parsing
 
-std::vector<std::string> SearchServer::splitIntoWordsNoStop(std::string_view text) const {
-    std::vector<std::string> result;
-    auto words = details::splitIntoWords(text);
-    for (auto& word : words) {
-        stringHasNotAnyForbiddenChars(word);
-        if (!isStopWord(word)) {
-            result.push_back(std::move(word));
+std::vector<std::string_view> SearchServer::splitIntoWordsNoStop(std::string_view text) const {
+    std::vector<std::string_view> result;
+    const auto words = details::splitIntoWordsView(text);
+    for (const auto wordView : words) {
+        stringHasNotAnyForbiddenChars(wordView);
+        if (!isStopWord(wordView)) {
+            result.emplace_back(wordView);
         }
     }
     return result;

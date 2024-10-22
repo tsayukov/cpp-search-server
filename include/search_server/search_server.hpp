@@ -149,7 +149,7 @@ private: // Metric computation
 private: // Parsing
 
     [[nodiscard]]
-    std::vector<std::string> splitIntoWordsNoStop(std::string_view text) const;
+    std::vector<std::string_view> splitIntoWordsNoStop(std::string_view text) const;
 
     struct QueryWord {
         std::string_view content;
