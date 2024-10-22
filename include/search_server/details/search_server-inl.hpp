@@ -65,13 +65,12 @@ std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& poli
     auto result =
             findAllDocuments(policy, parseQuery(policy, rawQuery, WordsRepeatable::kNo), predicate);
 
-    std::sort(policy, result.begin(), result.end(),
-              [](const Document& lhs, const Document& rhs) noexcept {
-                  if (std::abs(lhs.relevance - rhs.relevance) < kRelevanceErrorMargin) {
-                      return lhs.rating > rhs.rating;
-                  }
-                  return lhs.relevance > rhs.relevance;
-              });
+    std::sort(policy, result.begin(), result.end(), [](Document lhs, Document rhs) noexcept {
+        if (std::abs(lhs.relevance - rhs.relevance) < kRelevanceErrorMargin) {
+            return lhs.rating > rhs.rating;
+        }
+        return lhs.relevance > rhs.relevance;
+    });
 
     if (result.size() > kMaxResultDocumentCount) {
         result.resize(kMaxResultDocumentCount);
@@ -148,7 +147,7 @@ void SearchServer::computeDocumentsRelevance(const ExecutionPolicy& policy,
                       // https://en.wikipedia.org/wiki/Tf%E2%80%93idf
                       const double idf =
                               computeInverseDocumentFrequency(documentFrequencies.size());
-                      for (const auto& [documentId, tf] : documentFrequencies) {
+                      for (const auto [documentId, tf] : documentFrequencies) {
                           const auto& documentData = mDocuments.at(documentId);
                           if (predicate(documentId, documentData.status, documentData.rating)) {
                               documentToRelevance[documentId] += tf * idf;
