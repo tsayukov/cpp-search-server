@@ -176,7 +176,7 @@ SearchServer::matchDocument(const std::execution::parallel_policy&,
     checkDocumentIdIsNotNegative(documentId);
     checkDocumentIdExists(documentId);
 
-    const auto query = parseQuery(std::execution::seq, rawQuery, WordsRepeatable::kYes);
+    const auto query = parseQuery(std::execution::par, rawQuery, WordsRepeatable::kYes);
     const auto& documentData = mDocuments.at(documentId);
     const auto& wordFrequenciesInThatDocuments = documentData.wordFrequencies;
 
