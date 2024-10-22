@@ -2,7 +2,12 @@
     #error "`search_server.hpp.inc` cannot be included outside of `search_server.hpp`"
 #endif
 
+#include <search_server/details/concurrent_map.hpp>
 #include <search_server/search_server.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <thread>
 
 namespace search_server {
 

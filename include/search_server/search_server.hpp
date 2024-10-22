@@ -1,14 +1,10 @@
 #ifndef SEARCH_SERVER_SEARCH_SERVER_HPP_
 #define SEARCH_SERVER_SEARCH_SERVER_HPP_
 
-#include "search_server/details/concurrent_map.hpp"
-#include "search_server/details/string_processing.hpp"
-
+#include <search_server/details/string_processing.hpp>
 #include <search_server/document.hpp>
 #include <search_server/export.hpp>
 
-#include <algorithm>
-#include <cmath>
 #include <execution>
 #include <functional>
 #include <map>
@@ -16,7 +12,6 @@
 #include <set>
 #include <string>
 #include <string_view>
-#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
