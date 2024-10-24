@@ -1,3 +1,7 @@
+/// \file runner.hpp
+/// \author Pavel Tsayukov https://github.com/tsayukov/cpp-search-server
+/// \copyright CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/
+
 #ifndef SEARCH_SERVER_RUNNER_RUNNER_HPP_
 #define SEARCH_SERVER_RUNNER_RUNNER_HPP_
 

@@ -1,3 +1,8 @@
+/// \file search_server-inl.hpp
+/// \author Pavel Tsayukov https://github.com/tsayukov/cpp-search-server
+/// \author Yandex Practicum https://practicum.yandex.ru/
+/// \copyright CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/
+
 #ifndef SEARCH_SERVER_DETAILS_SEARCH_SERVER_INL_HPP_
     #error "`search_server.hpp.inc` cannot be included outside of `search_server.hpp`"
 #endif

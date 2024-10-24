@@ -1,3 +1,8 @@
+/// \file log_duration.cpp
+/// \author Pavel Tsayukov https://github.com/tsayukov/cpp-search-server
+/// \author Yandex Practicum https://practicum.yandex.ru/
+/// \copyright CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/
+
 #include <benchmarking/log_duration.hpp>
 
 namespace benchmarking {

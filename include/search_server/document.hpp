@@ -1,5 +1,8 @@
 /// \file document.hpp
 /// \brief Document's properties related to its ranking and current status
+/// \author Pavel Tsayukov https://github.com/tsayukov/cpp-search-server
+/// \author Yandex Practicum https://practicum.yandex.ru/
+/// \copyright CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/
 
 #ifndef SEARCH_SERVER_DOCUMENT_HPP_
 #define SEARCH_SERVER_DOCUMENT_HPP_
