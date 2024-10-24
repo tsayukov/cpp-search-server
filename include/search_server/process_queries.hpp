@@ -15,14 +15,20 @@
 
 namespace search_server {
 
-/// Process \c queries for given \c searchServer and put \c std::vector<Document>
-/// for each query into \c std::vector.
+/// \brief Process `queries` for given `searchServer` and put `std::vector<Document>` for each query
+/// into [`std::vector`][1].
+///
+/// [1]: https://en.cppreference.com/w/cpp/container/vector
+///
 SEARCH_SERVER_EXPORT
 std::vector<std::vector<Document>> processQueries(const SearchServer& searchServer,
                                                   const std::vector<std::string>& queries);
 
-/// Join the results of each query of the corresponding \c search_server::processQueries() call
-/// into one \c std::vector.
+/// \brief Join the results of each query of the corresponding `search_server::processQueries()`
+/// call into one [`std::vector`][1].
+///
+/// [1]: https://en.cppreference.com/w/cpp/container/vector
+///
 SEARCH_SERVER_EXPORT
 std::vector<Document> processQueriesJoined(const SearchServer& searchServer,
                                            const std::vector<std::string>& queries);
