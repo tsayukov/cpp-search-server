@@ -13,12 +13,12 @@
 
 namespace search_server {
 
-/// Document's current status
+/// \brief Document's current status.
 enum class SEARCH_SERVER_EXPORT DocumentStatus {
-    kActual,
-    kIrrelevant,
-    kBanned,
-    kRemoved,
+    kActual,     ///< Actual Document
+    kIrrelevant, ///< Irrelevant Document
+    kBanned,     ///< Banned Document
+    kRemoved,    ///< Removed Document
 };
 
 /// Document's ranking properties.
