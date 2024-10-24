@@ -58,14 +58,16 @@ SearchServer::Query SearchServer::parseQuery(const ExecutionPolicy& policy,
 
 template <typename Predicate>
 std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
-                                                     Predicate predicate) const {
-    return findTopDocuments(std::execution::seq, rawQuery, predicate);
+                                                     Predicate predicate,
+                                                     std::size_t topDocumentsCount) const {
+    return findTopDocuments(std::execution::seq, rawQuery, predicate, topDocumentsCount);
 }
 
 template <typename ExecutionPolicy, typename Predicate>
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
                                                      std::string_view rawQuery,
-                                                     Predicate predicate) const {
+                                                     Predicate predicate,
+                                                     std::size_t topDocumentsCount) const {
     auto result =
             findAllDocuments(policy, parseQuery(policy, rawQuery, WordsRepeatable::kNo), predicate);
 
@@ -76,8 +78,8 @@ std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& poli
         return lhs.relevance > rhs.relevance;
     });
 
-    if (result.size() > kMaxResultDocumentCount) {
-        result.resize(kMaxResultDocumentCount);
+    if (result.size() > topDocumentsCount) {
+        result.resize(topDocumentsCount);
     }
     return result;
 }
@@ -85,18 +87,21 @@ std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& poli
 template <typename ExecutionPolicy>
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
                                                      std::string_view rawQuery,
-                                                     DocumentStatus documentStatus) const {
+                                                     DocumentStatus documentStatus,
+                                                     std::size_t topDocumentsCount) const {
     return findTopDocuments(
             policy, rawQuery,
             [documentStatus](int /*documentId*/, DocumentStatus status, int /*rating*/) noexcept {
                 return status == documentStatus;
-            });
+            },
+            topDocumentsCount);
 }
 
 template <typename ExecutionPolicy>
 std::vector<Document> SearchServer::findTopDocuments(const ExecutionPolicy& policy,
-                                                     std::string_view rawQuery) const {
-    return findTopDocuments(policy, rawQuery, DocumentStatus::kActual);
+                                                     std::string_view rawQuery,
+                                                     std::size_t topDocumentsCount) const {
+    return findTopDocuments(policy, rawQuery, DocumentStatus::kActual, topDocumentsCount);
 }
 
 template <typename Predicate>

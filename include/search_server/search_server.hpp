@@ -92,31 +92,44 @@ public: // Search
 
     template <typename Predicate>
     [[nodiscard]]
-    std::vector<Document> findTopDocuments(std::string_view rawQuery, Predicate predicate) const;
+    std::vector<Document>
+    findTopDocuments(std::string_view rawQuery,
+                     Predicate predicate,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
 
     template <typename ExecutionPolicy, typename Predicate>
     [[nodiscard]]
-    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view rawQuery,
-                                           Predicate predicate) const;
+    std::vector<Document>
+    findTopDocuments(const ExecutionPolicy& policy,
+                     std::string_view rawQuery,
+                     Predicate predicate,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
 
     [[nodiscard]]
-    std::vector<Document> findTopDocuments(std::string_view rawQuery,
-                                           DocumentStatus documentStatus) const;
-
-    template <typename ExecutionPolicy>
-    [[nodiscard]]
-    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view rawQuery,
-                                           DocumentStatus documentStatus) const;
-
-    [[nodiscard]]
-    std::vector<Document> findTopDocuments(std::string_view rawQuery) const;
+    std::vector<Document>
+    findTopDocuments(std::string_view rawQuery,
+                     DocumentStatus documentStatus,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
 
     template <typename ExecutionPolicy>
     [[nodiscard]]
-    std::vector<Document> findTopDocuments(const ExecutionPolicy& policy,
-                                           std::string_view rawQuery) const;
+    std::vector<Document>
+    findTopDocuments(const ExecutionPolicy& policy,
+                     std::string_view rawQuery,
+                     DocumentStatus documentStatus,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
+
+    [[nodiscard]]
+    std::vector<Document>
+    findTopDocuments(std::string_view rawQuery,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
+
+    template <typename ExecutionPolicy>
+    [[nodiscard]]
+    std::vector<Document>
+    findTopDocuments(const ExecutionPolicy& policy,
+                     std::string_view rawQuery,
+                     std::size_t topDocumentsCount = kMaxResultDocumentCount) const;
 
     using MatchingWordsAndDocStatus = std::tuple<std::vector<std::string_view>, DocumentStatus>;
 

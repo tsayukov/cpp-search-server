@@ -124,14 +124,19 @@ void SearchServer::removeDocument(const std::execution::parallel_policy&, int do
 // Search
 
 std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
-                                                     DocumentStatus documentStatus) const {
-    return findTopDocuments(rawQuery,
-                            [documentStatus](int /*documentId*/, DocumentStatus status,
-                                             int /*rating*/) { return status == documentStatus; });
+                                                     DocumentStatus documentStatus,
+                                                     std::size_t topDocumentsCount) const {
+    return findTopDocuments(
+            rawQuery,
+            [documentStatus](int /*documentId*/, DocumentStatus status, int /*rating*/) {
+                return status == documentStatus;
+            },
+            topDocumentsCount);
 }
 
-std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery) const {
-    return findTopDocuments(rawQuery, DocumentStatus::kActual);
+std::vector<Document> SearchServer::findTopDocuments(std::string_view rawQuery,
+                                                     std::size_t topDocumentsCount) const {
+    return findTopDocuments(rawQuery, DocumentStatus::kActual, topDocumentsCount);
 }
 
 SearchServer::MatchingWordsAndDocStatus SearchServer::matchDocument(std::string_view rawQuery,
