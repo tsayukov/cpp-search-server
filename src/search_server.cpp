@@ -64,7 +64,7 @@ void SearchServer::addDocument(int documentId,
         auto iter = mWordToDocumentFrequencies.find(wordView);
         if (iter == mWordToDocumentFrequencies.end()) {
             auto docFrequency = std::unordered_map<int, double>{{documentId, invSize}};
-            auto [insertPos, _] =
+            const auto [insertPos, _] =
                     mWordToDocumentFrequencies.emplace(wordView, std::move(docFrequency));
             iter = insertPos;
         } else {
