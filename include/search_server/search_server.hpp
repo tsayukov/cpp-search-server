@@ -46,8 +46,11 @@ class SEARCH_SERVER_EXPORT SearchServer {
 
 private: // Constants
 
-    static constexpr int kMaxResultDocumentCount = 5;
     static constexpr double kRelevanceErrorMargin = 1e-6;
+
+public:
+
+    static constexpr std::size_t kMaxResultDocumentCount = 5;
 
 public: // Constructors
 
