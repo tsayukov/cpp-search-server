@@ -1,3 +1,8 @@
+/// \file search_server.cpp
+/// \author Pavel Tsayukov https://github.com/tsayukov/cpp-search-server
+/// \author Yandex Practicum https://practicum.yandex.ru/
+/// \copyright CC BY-NC 4.0 https://creativecommons.org/licenses/by-nc/4.0/
+
 #include <search_server/search_server.hpp>
 
 #include <execution>
