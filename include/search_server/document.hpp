@@ -21,10 +21,12 @@ enum class SEARCH_SERVER_EXPORT DocumentStatus {
     kRemoved,    ///< Removed Document
 };
 
-/// Document's ranking properties.
+/// \brief Document's ranking properties.
 ///
-/// Each document has an \c id identifier, \c relevance, and \c rating that is
-/// the arithmetic mean of all its ratings.
+/// Each document has an `id` identifier, `relevance`, and `rating` that is the arithmetic mean
+/// of all its ratings. Default-initialization of `Document` causes zero-initialization of all its
+/// non-static members.
+///
 struct SEARCH_SERVER_EXPORT Document {
     int id;
     int rating;
@@ -33,10 +35,13 @@ struct SEARCH_SERVER_EXPORT Document {
     Document(int id = 0, double relevance = 0.0, int rating = 0) noexcept;
 };
 
-/// Insert a textual representation of \c document into \c output as follows:
+/// \brief Insert a textual representation of `document` into `output`.
+///
+/// The output format of the document is as follows:
 /// \code
 /// { documentId = <id>, relevance = <relevance>, rating = <rating> }
 /// \endcode
+///
 SEARCH_SERVER_EXPORT
 std::ostream& operator<<(std::ostream& output, const Document& document);
 
