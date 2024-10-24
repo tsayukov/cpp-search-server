@@ -146,9 +146,8 @@ void SearchServer::computeDocumentsRelevance(const ExecutionPolicy& policy,
                       }
                       const auto& documentFrequencies = iter->second;
 
-                      // Computation TF-IDF (term frequency–inverse document
-                      // frequency) source:
-                      // https://en.wikipedia.org/wiki/Tf%E2%80%93idf
+                      /// Computation TF-IDF (term frequency–inverse document frequency) source:
+                      /// https://en.wikipedia.org/wiki/Tf%E2%80%93idf
                       const double idf =
                               computeInverseDocumentFrequency(documentFrequencies.size());
                       for (const auto [documentId, tf] : documentFrequencies) {
