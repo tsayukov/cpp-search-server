@@ -3,6 +3,7 @@
 #include <search_server/search_server.hpp>
 
 #include <iostream>
+#include <execution>
 
 namespace runner {
 
@@ -15,7 +16,7 @@ void run() {
     server.addDocument(2, "cat lives in the house", DocumentStatus::kActual, ratings);
     server.addDocument(6, "cat and dog live in the house", DocumentStatus::kActual, ratings);
     server.addDocument(4, "cat and dog and bird live in the house", DocumentStatus::kActual, ratings);
-    auto foundDocs = server.findTopDocuments("cat dog bird");
+    auto foundDocs = server.findTopDocuments(std::execution::par, "cat dog bird");
     std::cout << "Found: " << foundDocs.size() << " documents." << std::endl;
 }
 

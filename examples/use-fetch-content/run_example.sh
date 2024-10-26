@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 TEST_NAME="use-fetch-content"
 

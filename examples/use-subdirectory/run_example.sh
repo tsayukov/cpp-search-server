@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 TEST_NAME="use-subdirectory"
 
@@ -29,6 +30,7 @@ EOF
     mkdir -p "${TEST_SOURCE_DIR}/search_server"
 
     cp -r "${PROJECT_SOURCE_DIR}/cmake" "${TEST_SOURCE_DIR}/search_server/"
+    cp -r "${PROJECT_SOURCE_DIR}/extras" "${TEST_SOURCE_DIR}/search_server/"
     cp -r "${PROJECT_SOURCE_DIR}/include" "${TEST_SOURCE_DIR}/search_server/"
     cp -r "${PROJECT_SOURCE_DIR}/src" "${TEST_SOURCE_DIR}/search_server/"
     cp "${PROJECT_SOURCE_DIR}/CMakeLists.txt" "${TEST_SOURCE_DIR}/search_server/CMakeLists.txt"
