@@ -23,8 +23,6 @@ fcm_no_in_source_builds_guard(
 fcm_use_cxx_standard_at_least(17)
 fcm_disable_cxx_extensions()
 
-add_subdirectory(extras)
-
 if (UNIX)
   find_package(TBB)
   if (NOT TBB_FOUND)
@@ -35,6 +33,8 @@ if (UNIX)
 endif()
 
 fcm_include("Dependencies" TEMPLATE)
+
+add_subdirectory(extras)
 
 fcm_add_library(search_server)
 fcm_target_link_libraries(search_server
@@ -53,6 +53,7 @@ fcm_generate_export_header(search_server
   INCLUDE_GUARD_NAME "SEARCH_SERVER_EXPORT_HPP_"
   EXPORT_FILE_NAME "search_server/export.hpp"
 )
+fcm_lcov_enable(search_server)
 
 add_subdirectory(src)
 
@@ -63,6 +64,10 @@ endif()
 if (ENABLE_BENCHMARKING)
   add_subdirectory(benchmarks)
 endif()
+
+fcm_lcov_add_custom_target(coverage
+  EXCLUDE "${PROJECT_SOURCE_DIR}/extras/*"
+)
 
 fcm_clang_format_add_custom_target(format
   DIRECTORIES

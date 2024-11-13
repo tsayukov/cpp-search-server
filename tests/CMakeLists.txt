@@ -11,6 +11,7 @@ foreach (suffix IN ITEMS tests parallel_tests)
       search_server::search_server
       search_server::testing_main
   )
+  fcm_lcov_enable(${suffix})
 endforeach()
 
 fcm_valgrind_add_custom_target(FOR tests)
