@@ -78,12 +78,10 @@ fcm_clang_format_add_custom_target(format
     "benchmarks"
 )
 
-set(DOXYGEN_EXCLUDE_PATTERNS "*/details/*")
 fcm_doxygen_add_custom_target(docs
   FORMAT html
-  INPUTS
-    "include"
-    "README.md"
+  INPUTS "include" "README.md"
+  EXCLUDE_PATTERNS "*/details/*"
 )
 
 fcm_enable_if(ENABLE_INSTALL)
